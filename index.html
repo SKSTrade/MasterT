@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh-HK">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Trade Matrix">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Master Trade V3.4</title>
+</head>
+<body>
+  <header class="app-header">
+    <div><p class="eyebrow">MASTER TRADE</p><h1>Decision Matrix V3.4</h1></div>
+  </header>
+
+  <nav class="tab-bar">
+    <button class="tab-button active" data-tab="decision">決策</button>
+    <button class="tab-button" data-tab="history">紀錄</button>
+    <button class="tab-button" data-tab="rules">規則</button>
+  </nav>
+
+  <main>
+    <section id="decision" class="tab-panel active">
+      <form id="decisionForm">
+        <article class="card">
+          <h2>市場</h2>
+          <label>市場代號<input id="symbol" type="text" value="EURUSD" autocapitalize="characters"></label>
+        </article>
+
+        <article class="card">
+          <h2>四層時間框架｜自動配置</h2>
+          <label>入場觸發層
+            <select id="entryTimeframe">
+              <option>1M</option><option>3M</option><option selected>5M</option><option>15M</option><option>1H</option>
+            </select>
+          </label>
+          <div class="summary-grid">
+            <div><span>次判斷層</span><strong id="secondaryTimeframeDisplay"></strong></div>
+            <div><span>主判斷層</span><strong id="mainTimeframeDisplay"></strong></div>
+            <div><span>大局背景層</span><strong id="backgroundTimeframeDisplay"></strong></div>
+          </div>
+          <p class="muted">核心矩陣只計「主判斷層 × 次判斷層」。大局背景只按指定條件封頂；入場觸發層只負責 Q 級及執行。</p>
+        </article>
+
+        <article class="card">
+          <h2>三層市場狀態</h2>
+          <label><span id="backgroundStateLabel"></span><select id="backgroundState"></select></label>
+          <p id="backgroundStateNote" class="state-note"></p>
+          <label><span id="mainStateLabel"></span><select id="mainState"></select></label>
+          <p id="mainStateNote" class="state-note"></p>
+          <label><span id="secondaryStateLabel"></span><select id="secondaryState"></select></label>
+          <p id="secondaryStateNote" class="state-note"></p>
+
+          <div id="transitionOptions" class="hidden">
+            <label>轉換附加標籤
+              <select id="transitionTag">
+                <option value="未形成區間">轉換中－未形成區間</option>
+                <option value="已形成橫行">轉換中－已形成橫行</option>
+              </select>
+            </label>
+          </div>
+          <label id="rangeBoundaryRow" class="toggle-row hidden"><input id="isClearRangeBoundary" type="checkbox"><span>位置係明確橫行邊界</span></label>
+        </article>
+
+        <article class="card">
+          <h2>交易方向與市場關係</h2>
+          <div class="segmented">
+            <label><input type="radio" name="direction" value="Long"><span>Long</span></label>
+            <label><input type="radio" name="direction" value="Short" checked><span>Short</span></label>
+          </div>
+          <div class="result-lines compact">
+            <div><span>主判斷 × 次判斷</span><strong id="marketRelation"></strong></div>
+            <div><span>基本市場上限</span><strong id="marketCap"></strong></div>
+            <div><span>大局背景關係</span><strong id="backgroundRelation"></strong></div>
+          </div>
+          <p id="backgroundRelationNote" class="muted"></p>
+          <label id="backgroundLevelRow" class="toggle-row hidden"><input id="atBackgroundSupportResistance" type="checkbox"><span>已到大局背景支持／阻力位</span></label>
+          <p id="backgroundLevelNote" class="state-note hidden">只有「逆健康大局背景＋已到大局支持／阻力位」先會將最高注碼封頂 0.5 注；未到大局位不影響原本矩陣注碼。</p>
+        </article>
+
+        <article class="card">
+          <h2>位置級別</h2>
+          <label>位置
+            <select id="positionLevel">
+              <option value="P1">P1｜最高級位置</option>
+              <option value="P2" selected>P2｜高質工作位置</option>
+              <option value="P3">P3｜次級位置</option>
+              <option value="P4">P4｜無交易位置</option>
+            </select>
+          </label>
+          <h3 id="positionTitle"></h3><p id="positionNote" class="muted"></p>
+        </article>
+
+        <article class="card">
+          <h2>Trigger 1｜Sweep 與 Reclaim</h2>
+          <label class="toggle-row"><input id="meaningfulSweep" type="checkbox"><span><strong>有效 Sweep</strong><small>掃走 Asia／OPR／PDH／PDL／前 Swing／主結或區間邊界。</small></span></label>
+          <label class="toggle-row"><input id="reclaimedSweepLevel" type="checkbox"><span><strong>收復 Sweep 位置</strong><small>價格真正收返關鍵位。</small></span></label>
+          <label class="toggle-row"><input id="brokeSweepMicroStructure" type="checkbox"><span><strong>破壞造成 Sweep 嗰段微結構</strong><small>重新破壞 micro swing／pause candle 方向。</small></span></label>
+          <label class="toggle-row"><input id="recoveredImpulseOrigin" type="checkbox"><span><strong>收復 pause candle／impulse origin</strong><small>加分項；未做到會記錄為瑕疵。</small></span></label>
+          <label>Reclaim 後 Follow-through
+            <select id="followThrough"><option value="none">冇 Follow-through</option><option value="ordinary">一般／不足</option><option value="strong">明顯</option></select>
+          </label>
+        </article>
+
+        <article class="card">
+          <h2>Trigger 2｜Reclaim 動能</h2>
+          <p>以下五項最少兩項成立。現時：<strong id="momentumCount">0／5</strong></p>
+          <label class="toggle-row"><input id="momentumStrongBody" type="checkbox"><span>實體比例高</span></label>
+          <label class="toggle-row"><input id="momentumCloseNearExtreme" type="checkbox"><span>收近燭頂／燭底</span></label>
+          <label class="toggle-row"><input id="momentumBrokeMicroSwing" type="checkbox"><span>突破 micro swing</span></label>
+          <label class="toggle-row"><input id="momentumRVOL" type="checkbox"><span>有 RVOL 支持</span></label>
+          <label class="toggle-row"><input id="momentumCleanerThanPriorMove" type="checkbox"><span>Reclaim 比原方向推動更乾淨</span></label>
+        </article>
+
+        <article class="card">
+          <h2>Trigger 3｜Retest 相對弱</h2>
+          <label class="toggle-row"><input id="retestSlower" type="checkbox"><span>Retest 速度慢過 Reclaim</span></label>
+          <label class="toggle-row"><input id="retestWeakerCandles" type="checkbox"><span>Retest 單燭力度較弱</span></label>
+          <label>Retest 深度
+            <select id="retestDepth"><option value="invalid">深過 0.88｜原 Trigger 失效</option><option value="imperfect">0.786–0.88｜扣分</option><option value="normal">0.5–0.786｜正常</option></select>
+          </label>
+          <label id="secondConfirmationRow" class="toggle-row"><input id="secondConfirmationAfterDeepRetest" type="checkbox"><span>深過 0.88 後已重新 Reclaim＋第二次確認</span></label>
+          <label class="toggle-row"><input id="retestLowerVolume" type="checkbox"><span>Retest 成交量低過 Reclaim</span></label>
+          <p>Retest 四項合格：<strong id="retestCount">0／4</strong></p>
+        </article>
+
+        <article class="card">
+          <h2>Trigger 4｜交易空間與確認層級</h2>
+          <div class="result-lines compact"><div><span>入場觸發層</span><strong id="entryTimeframeTriggerDisplay"></strong></div></div>
+          <label>到第一真實目標嘅空間
+            <select id="tradeSpace"><option value="insufficient">不足｜第一真實目標前冇合理 R:R</option><option value="slightlyShort">略短｜仍可管理但要降級</option><option value="enough">足夠｜到第一真實目標接近或多過 1:2</option></select>
+          </label>
+          <label class="toggle-row"><input id="onlyEntryLayerConfirmation" type="checkbox"><span>只得入場觸發層確認，未有更高級別配合</span></label>
+        </article>
+
+        <article class="card">
+          <h2>Trigger 自動評級</h2>
+          <div class="grade-line"><span>評級</span><strong id="triggerGrade" class="grade q1"></strong></div>
+          <div id="triggerEvaluation"></div>
+        </article>
+
+        <article class="card">
+          <h2>硬性否決條件</h2>
+          <label class="toggle-row"><input id="chasedBreakout" type="checkbox"><span>突破線後立即追價</span></label>
+          <label class="toggle-row"><input id="after1030" type="checkbox"><span>超過 10:30 入場限制</span></label>
+          <label class="toggle-row"><input id="usdRiskExceeded" type="checkbox"><span>同一美元方向總風險超標</span></label>
+          <label class="toggle-row"><input id="loosenedTriggerBecauseBias" type="checkbox"><span>因方向偏升／跌而放寬 Trigger</span></label>
+          <label class="toggle-row"><input id="emotionalSizing" type="checkbox"><span>因連贏／連輸／特別有信心而加注</span></label>
+        </article>
+
+        <article class="card result-card">
+          <h2>V3.4 最終結果</h2>
+          <div class="result-lines">
+            <div><span>大局背景</span><strong id="resultBackground"></strong></div>
+            <div><span>主判斷</span><strong id="resultMain"></strong></div>
+            <div><span>次判斷</span><strong id="resultSecondary"></strong></div>
+            <div><span>入場觸發</span><strong id="resultEntry"></strong></div>
+            <div><span>核心市場關係</span><strong id="resultRelation"></strong></div>
+            <div><span>市場上限</span><strong id="resultMarketCap"></strong></div>
+            <div><span>矩陣許可</span><strong id="resultMatrixSize"></strong></div>
+            <div><span>背景限制後</span><strong id="resultAdjustedSize"></strong></div>
+          </div>
+          <div class="final-size"><span>最終注碼</span><strong id="finalSize"></strong></div>
+          <div id="decisionExplanations"></div>
+        </article>
+
+        <article class="card">
+          <h2>交易備註</h2>
+          <label>備註<textarea id="note" rows="5" placeholder="失效點、入場位置、管理計劃、第一目標"></textarea></label>
+          <button type="submit" class="primary-button">儲存 V3.4 決策</button>
+        </article>
+      </form>
+    </section>
+
+    <section id="history" class="tab-panel">
+      <article class="card">
+        <div class="section-heading"><h2>紀錄與統計</h2><button id="exportCsv" class="secondary-button">匯出 CSV</button></div>
+        <div class="summary-grid four">
+          <div><span>總紀錄</span><strong id="statCount">0</strong></div>
+          <div><span>平均建議注碼</span><strong id="statAverageSize">0.00</strong></div>
+          <div><span>已填結果平均 R</span><strong id="statAverageR">未有資料</strong></div>
+          <div><span>已填結果勝率</span><strong id="statWinRate">未有資料</strong></div>
+        </div>
+      </article>
+      <div id="historyList"></div>
+    </section>
+
+    <section id="rules" class="tab-panel">
+      <article class="card"><h2>自動時間框架配置</h2>
+        <div class="rule-grid">
+          <div><strong>入場 1M／3M</strong><span>次判 15M｜主判 1H｜大局 4H</span></div>
+          <div><strong>入場 5M／15M</strong><span>次判 1H｜主判 4H｜大局 D</span></div>
+          <div><strong>入場 1H</strong><span>次判 4H｜主判 D｜大局 W</span></div>
+        </div>
+      </article>
+      <article class="card"><h2>核心流程</h2><p class="large-rule">大局背景 → 主判斷 × 次判斷 → 位置級別 → 入場 Trigger → 最終注碼</p></article>
+      <article class="card"><h2>一注唯一條件</h2><p class="large-rule">主判斷健康趨勢＋次判斷健康同向＋P1／P2＋Q3。</p><p class="muted">大局背景同向亦唔可以自行加注。</p></article>
+      <article class="card"><h2>大局背景規則</h2><ul><li>順背景：只作支持，不加注。</li><li>逆健康背景＋已到大局支持／阻力位：最高封頂 0.5 注。</li><li>逆健康背景但未到大局支持／阻力位：不影響原本矩陣注碼。</li><li>逆弱勢背景：不自動調整注碼。</li><li>背景轉換：不提供加注理由。</li></ul></article>
+      <article class="card"><h2>資料</h2><p>紀錄只儲存在呢部裝置嘅瀏覽器。定期匯出 CSV；清除 Safari 網站資料會刪除紀錄。</p></article>
+    </section>
+  </main>
+
+  <dialog id="recordDialog">
+    <form method="dialog">
+      <div class="dialog-header"><h2 id="dialogTitle"></h2><button value="cancel" class="icon-button">×</button></div>
+      <div id="recordDetails" class="record-details"></div>
+      <label>實際注碼<input id="editActualSize" type="number" step="0.25" min="0" max="1"></label>
+      <label>結果 R<input id="editResultR" type="number" step="0.01"></label>
+      <label>覆盤備註<textarea id="editNote" rows="5"></textarea></label>
+      <div class="dialog-actions"><button id="deleteRecord" type="button" class="danger-button">刪除</button><button value="cancel" class="secondary-button">取消</button><button id="saveRecordEdit" type="button" class="primary-button compact-button">儲存修改</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast"></div>
+  <script src="./app.js"></script>
+</body>
+</html>
