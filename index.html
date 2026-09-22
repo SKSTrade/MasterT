@@ -3,219 +3,2159 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#111827">
+  <meta name="theme-color" content="#162033">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Trade Matrix">
+  <meta name="apple-mobile-web-app-title" content="Trade Journal">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="stylesheet" href="./styles.css">
-  <title>Master Trade V3.4</title>
+  <title>Master Trade Practice & Live Journal</title>
 </head>
 <body>
   <header class="app-header">
-    <div><p class="eyebrow">MASTER TRADE</p><h1>Decision Matrix V3.4</h1></div>
+    <div>
+      <p class="eyebrow">MASTER TRADE</p>
+      <h1>Master Trade System</h1>
+      <p class="header-subtitle">All-Market Matrix｜HSI／UK100／GER40／FX／XAU</p>
+    </div>
+    <span class="version-badge">V1.31.0</span>
   </header>
 
-  <nav class="tab-bar">
-    <button class="tab-button active" data-tab="decision">決策</button>
-    <button class="tab-button" data-tab="history">紀錄</button>
+  <nav class="tab-bar" aria-label="主要頁面">
+    <button class="tab-button active" data-tab="live">Live Decision</button>
+    <button class="tab-button" data-tab="rulebook">Rulebook</button>
+    <button class="tab-button" data-tab="history">紀錄庫</button>
     <button class="tab-button" data-tab="rules">規則</button>
   </nav>
 
   <main>
-    <section id="decision" class="tab-panel active">
-      <form id="decisionForm">
-        <article class="card">
-          <h2>市場</h2>
-          <label>市場代號<input id="symbol" type="text" value="EURUSD" autocapitalize="characters"></label>
-        </article>
 
-        <article class="card">
-          <h2>四層時間框架｜自動配置</h2>
-          <label>入場觸發層
-            <select id="entryTimeframe">
-              <option>1M</option><option>3M</option><option selected>5M</option><option>15M</option><option>1H</option>
+    <section id="live" class="tab-panel active">
+      <article class="card live-hero">
+        <p class="eyebrow">ALL-MARKET LIVE MATRIX</p>
+        <h2>HSI／UK100／GER40／外匯／黃金整合版</h2>
+        <p class="large-rule">大局 → Market State → Direction Permission → Control → Raw P → Setup／E → Native Q → Obstacle／R:R → Final Size → Objective</p>
+        <p class="muted">Setup唔會創造方向權限；最終注碼由方向／市場關係、P×Q、Range及障礙限制取最低。</p>
+      </article>
+
+      <form id="liveDecisionForm" novalidate>
+        <article class="card live-step">
+          <div class="live-step-title"><span>市場</span><h2>市場＋核心Setup</h2></div>
+          <label>
+            市場
+            <select id="liveMarketCode">
+              <option value="HSI">HSI</option>
+              <option value="UK100">UK100</option>
+              <option value="GER40">GER40</option>
+              <option value="FX" selected>外匯</option>
+              <option value="XAU">黃金</option>
             </select>
           </label>
-          <div class="summary-grid">
-            <div><span>次判斷層</span><strong id="secondaryTimeframeDisplay"></strong></div>
-            <div><span>主判斷層</span><strong id="mainTimeframeDisplay"></strong></div>
-            <div><span>大局背景層</span><strong id="backgroundTimeframeDisplay"></strong></div>
+          <label>
+            Setup
+            <select id="liveSetupTemplate"></select>
+          </label>
+          <p id="liveSetupTemplateNote" class="state-note"></p>
+
+          <div id="livePreviousHLSweepPanel" class="conditional-panel hidden">
+            <label>
+              被Sweep嘅Previous H/L
+              <select id="livePrevHLSource">
+                <option value="pdhPdl" selected>PDH／PDL</option>
+                <option value="pwhPwl">PWH／PWL</option>
+              </select>
+            </label>
+            <label>
+              Sweep發生Session
+              <select id="livePrevHLSession">
+                <option value="asia" selected>Asia Sweep</option>
+                <option value="europe">Europe／London Sweep</option>
+              </select>
+            </label>
+            <p class="state-note">只記Liquidity來源＋Session；Native Q仍按實際Sweep／Reclaim／Retest判。</p>
           </div>
-          <p class="muted">核心矩陣只計「主判斷層 × 次判斷層」。大局背景只按指定條件封頂；入場觸發層只負責 Q 級及執行。</p>
+
+          <div id="liveXauLiquidityPanel" class="conditional-panel hidden">
+            <label id="liveXauLiquiditySourceRow">
+              XAU Liquidity來源
+              <select id="liveXauLiquiditySource">
+                <option value="htfMajor">HTF主結／Major Swing／HTF Range</option>
+                <option value="pwhPwl">PWH／PWL</option>
+                <option value="pdhPdl">PDH／PDL</option>
+                <option value="monHL">Mon H／Mon L</option>
+                <option value="asiaHL">Asia H／Asia L</option>
+                <option value="oprHL">OPR H／OPR L</option>
+                <option value="other" selected>其他／未指定</option>
+              </select>
+            </label>
+            <label id="liveXauSweepSessionRow">
+              Sweep時段
+              <select id="liveXauSweepSession">
+                <option value="asia">Asia</option>
+                <option value="london">London／Europe</option>
+                <option value="other" selected>其他／未指定</option>
+              </select>
+            </label>
+            <div class="result-lines compact">
+              <div><span>Liquidity級別</span><strong id="liveXauLiquidityRank">未分級</strong></div>
+              <div><span>E標記</span><strong id="liveXauEdgeMarker">無E標記</strong></div>
+              <div><span>原生P＋E</span><strong id="liveXauPositionEdgeLabel">P2</strong></div>
+              <div><span>打法優先級</span><strong id="liveXauSetupPriority">N/A</strong></div>
+            </div>
+
+            <label class="toggle-row">
+              <input id="liveXauEnhancementCoreValid" type="checkbox">
+              <span><strong>E／E+升級硬條件完整</strong><small>Sweep＋Reclaim有效、控制權轉移成立、Retest弱；冇fast/deep/strong Retest、冇失效Reclaim、冇強反向microstructure，而且空間合格。</small></span>
+            </label>
+
+            <input id="liveXauQ2MarginalOnly" type="checkbox" hidden>
+            <p class="state-note">V1.3：XAU E／E+只可提升Execution P，唔會將Native Q2改名Q3。</p>
+
+            <p id="liveXauLiquidityNote" class="state-note"></p>
+          </div>
+
+          <div id="liveEUOpeningPanel" class="conditional-panel hidden">
+            <label>
+              Opening Drive有效期
+              <select id="liveOpeningDriveStatus">
+                <option value="fresh" selected>同一Opening Drive｜第一次實質Retest</option>
+                <option value="delayed">延遲但仍屬原故事｜Entry-time Q重評</option>
+                <option value="expired">已完成新結構循環／新Range／重新Acceptance｜過期</option>
+              </select>
+            </label>
+
+            <div id="liveEuDConfirmationRows" class="conditional-panel hidden">
+              <label class="toggle-row">
+                <input id="liveEuDConfirmed" type="checkbox">
+                <span><strong>正式開市後確認完整</strong><small>Asia Sweep後，Opening Drive破微結構／工作結構，再等第一次弱Retest。</small></span>
+              </label>
+              <label class="toggle-row">
+                <input id="liveEuDPreOpenEntry" type="checkbox">
+                <span><strong>曾喺正式開市前直接入場</strong><small>勾選即0注；Asia 2B during POR唔係獨立Setup。</small></span>
+              </label>
+            </div>
+          </div>
         </article>
 
-        <article class="card">
-          <h2>三層市場狀態</h2>
-          <label><span id="backgroundStateLabel"></span><select id="backgroundState"></select></label>
-          <p id="backgroundStateNote" class="state-note"></p>
-          <label><span id="mainStateLabel"></span><select id="mainState"></select></label>
-          <p id="mainStateNote" class="state-note"></p>
-          <label><span id="secondaryStateLabel"></span><select id="secondaryState"></select></label>
-          <p id="secondaryStateNote" class="state-note"></p>
+        <article class="card"><div class="shared-e-panel"><h3>共用 E Source｜V1.3 + V1.4</h3><label>E Source<select id="livesharedESource"><option value="auto">沿用原 Setup／XAU E Source</option><option value="monHL">Mon H/L</option><option value="pdhPdl">PDH / PDL（FX / XAU）</option><option value="oprHL">OPR H/L</option><option value="htfMajor">Active HTF Structure / Liquidity</option></select></label><label class="toggle-row"><input id="livesharedEFirst" type="checkbox"><span>First meaningful sweep</span></label><label class="toggle-row"><input id="livesharedEFresh" type="checkbox"><span>Fresh level｜未消耗</span></label><label class="toggle-row"><input id="livesharedEActive" type="checkbox"><span>Active HTF structure（只限 HTF Source）</span></label><label class="toggle-row"><input id="livesharedECore" type="checkbox"><span>有效 Sweep + Reclaim + Control Transfer，Retest 未失效</span></label><p class="state-note">Mon／PDH-PDL／OPR／HTF Source 兩套共用；只限 Sweep／Reclaim。P3 可成 P2-E，Native Q 保留；方向、P4、時間及 RR 限制仍有效。HSI-C Continuation 唔會因 OPR 名稱自動取得 E。</p><p id="livesharedEStatus" class="state-note"></p></div></article>
+        <article class="card live-step">
+          <div class="live-step-title"><span>STEP 1</span><h2>主判 × 次判｜市場關係／交易路線</h2></div>
+          <label>
+            目前市場關係＋今次交易路線
+            <select id="liveMarketRoute">
+              <option value="healthyAligned">A｜雙健康同向｜Max 1注</option>
+              <option value="weakAligned">B｜同向但至少一層弱｜Max 0.5</option>
+              <option value="transitionConfirmed">C｜Directional Transition＋Confirmed同向｜Max 0.5</option>
+              <option value="alignedTransition">D｜Aligned Transition｜V1.3 P2 Q3 0.25</option>
+              <option value="neutralMainConfirmed">E｜主判中性Transition＋次判Confirmed｜Max 0.5 Reaction</option>
+              <option value="neutralTransition">F｜Neutral／Range Transition｜Boundary only｜Reaction</option>
+              <option value="mixedTransition">G｜Mixed Transition｜Conflict Boundary</option>
+              <option value="conflictMain">H / I｜順主判、次判Opposing／Transitioning Against｜Max 0.5</option>
+              <option value="transitionVsConfirmedConflict">J｜Directional Transition × Confirmed反向</option>
+              <option value="reverseWeakMain">K｜逆弱主判｜Route A/B only｜Max 0.25</option>
+              <option value="reverseHealthyMain">L｜逆健康主判｜Active P1 Probe only｜Max 0.25</option>
+              <option value="neutralMainReverse">M｜主判中性但逆Confirmed次判｜P1 Boundary Probe only</option>
+              <option value="alignedReverse">N / 其他反共同方向｜正常0／現行窄義HTF P1例外0.25</option>
+              <option value="conflictSecondary">Legacy｜舊版逆主判Route</option>
+              <option value="transitionReverse">Legacy｜舊版Transition反向Probe</option>
+            </select>
+          </label>
+          <label>Control Alignment｜研究欄位
+            <select id="liveControlAlignment">
+              <option value="Confirmed">Confirmed｜次判已同Trade方向Trend</option>
+              <option value="Transitioning" selected>Transitioning｜次判正在轉</option>
+              <option value="Opposing">Opposing｜次判仍係反方向Trend</option>
+            </select>
+          </label>
+          <div class="result-lines compact">
+            <div><span>市場關係上限</span><strong id="liveMarketCap">1注</strong></div>
+          </div>
+          <p id="liveRelationNote" class="state-note"></p>
+        </article>
 
-          <div id="transitionOptions" class="hidden">
-            <label>轉換附加標籤
-              <select id="transitionTag">
-                <option value="未形成區間">轉換中－未形成區間</option>
-                <option value="已形成橫行">轉換中－已形成橫行</option>
+        <article class="card live-step">
+          <div class="live-step-title"><span>STEP 2</span><h2>Setup Type</h2></div>
+          <label>
+            入場模式
+            <select id="liveSetupType">
+              <option value="A">Type A｜高質Session 2B</option>
+              <option value="B" selected>Type B｜普通Sweep＋Reclaim</option>
+              <option value="C">Type C｜Breakout／No Sweep</option>
+            </select>
+            <small>市場Setup會自動分類；自訂手動揀A唔代表已取得Type A資格。</small>
+          </label>
+
+          <div id="liveTypeAPanel" class="conditional-panel hidden">
+            <label class="toggle-row">
+              <input id="liveTypeAQualified" type="checkbox">
+              <span><strong>已確認Type A資格</strong><small>方向一致＋高質OPR／Asia 2B，等同5／6以上。</small></span>
+            </label>
+            <input id="liveTypeAQ2EdgeOnly" type="checkbox" hidden>
+            <p class="state-note">V1.3取消Type A Q2→Q3；Native Q永久保留。</p>
+          </div>
+
+          <div id="liveTypeCPanel" class="conditional-panel hidden">
+            <p id="liveTypeCNote">Breakout／Full Repair可以係原生P2；普通No-Sweep反轉只限真正P1。</p>
+          </div>
+
+          <p><strong>分類：</strong> <span id="liveSetupClassification">Type B</span></p>
+
+          <div class="result-lines compact">
+            <div><span>有效Setup Type</span><strong id="liveEffectiveSetupType">Type B</strong></div>
+          </div>
+        </article>
+
+        <article class="card live-step">
+          <div class="live-step-title"><span>STEP 3</span><h2>位置P＋逆弱主判 Confirmation</h2></div>
+          <label>
+            原始Entry位置
+            <select id="livePosition">
+              <option value="P1">P1｜大局級位置</option>
+              <option value="P2" selected>P2｜重要工作位置</option>
+              <option value="P3">P3｜普通局部位置</option>
+              <option value="P4">P4｜無價值位置</option>
+            </select>
+          </label>
+
+          <label>
+            P1順風
+            <select id="liveP1Tailwind">
+              <option value="no" selected>冇</option>
+              <option value="valid">有｜仍有效：第一段反轉＋第一次回調</option>
+              <option value="expired">曾有但已失效</option>
+            </select>
+          </label>
+
+          <div id="liveCounterP2BasisRow" class="conditional-panel hidden">
+            <label>
+              逆弱主判｜Route A／B Confirmation
+              <select id="liveCounterP2Basis">
+                <option value="none">冇A／B｜逆弱主判正常0</option>
+                <option value="weakBreakRetest">Route A｜弱主判次結／工作結構Break＋Acceptance＋首次Retest</option>
+                <option value="weakFreshSession">Route B｜弱主判＋健康次判＋新Session Confirmation</option>
+              </select>
+            </label>
+
+            <div id="liveWeakFreshSessionPanel" class="conditional-panel hidden">
+              <label class="toggle-row">
+                <input id="liveWeakFreshWorkStructureHeld" type="checkbox">
+                <span><strong>研究記錄｜主判工作結構已突破並維持</strong><small>可記，但唔再係Route B Size gate。</small></span>
+              </label>
+
+              <label class="toggle-row">
+                <input id="liveWeakFreshSecondaryHealthy" type="checkbox">
+                <span><strong>次判已係健康反方向趨勢</strong><small>唔只係轉換偏向。</small></span>
+              </label>
+
+              <label class="toggle-row">
+                <input id="liveWeakFreshIndependentSession" type="checkbox">
+                <span><strong>全新、獨立高質Session Setup</strong><small>EU-B／EU-D／其他同級開市後Sweep-Reclaim。</small></span>
+              </label>
+
+              <label>
+                去主判主結／第一硬障礙距離（R）
+                <input id="liveWeakFreshHardObstacleR" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Research only｜最終RR由Obstacle處理">
+              </label>
+
+              <label class="toggle-row">
+                <input id="liveWeakFreshNotMatureLeg" type="checkbox">
+                <span><strong>研究記錄｜未處於次判成熟逆向腿尾段</strong></span>
+              </label>
+
+              <label class="toggle-row">
+                <input id="liveWeakFreshNotNearMainStructure" type="checkbox">
+                <span><strong>研究記錄｜未貼近主判主結／第一硬障礙</strong></span>
+              </label>
+            </div>
+
+            <p class="state-note">K逆弱主判：P1/P2/P2-E都只認Route A或Route B＋Native Q3，最高0.25。P1順風只作背景記錄。Route B其他距離／成熟度欄位保留Research，但唔再係硬性Size gate。</p>
+          </div>
+
+          <div id="liveHTFP1ReversalExceptionRow" class="conditional-panel hidden">
+            <label class="toggle-row">
+              <input id="liveHTFP1ReversalException" type="checkbox">
+              <span><strong>窄義HTF P1反轉例外完整成立</strong><small>Daily／Weekly P1＋原生至少P2＋Q3＋對應Setup模型嘅等價右側確認＋第一段新鮮反應；最高0.25 Probe。</small></span>
+            </label>
+          </div>
+
+          <div id="liveTransitionLayerP1Row" class="conditional-panel hidden">
+            <label class="toggle-row">
+              <input id="liveTransitionLayerP1" type="checkbox">
+              <span><strong>呢個P1係Transition層真正大位</strong></span>
+            </label>
+          </div>
+
+          <div id="liveTransitionP2TailwindRow" class="conditional-panel hidden">
+            <label>
+              Transition主判｜P1順風方向資格
+              <select id="liveTransitionP2TailwindAlignment">
+                <option value="none" selected>未確認／不合資格</option>
+                <option value="neutral">主判轉換中性｜Long／Short都可</option>
+                <option value="aligned">交易方向順主判Transition偏向｜可</option>
+                <option value="opposite">交易方向逆主判Transition偏向｜不可</option>
+              </select>
+            </label>
+            <p class="state-note">仲要P1順風仍有效＋P2／P2-E＋Q3；合資格都只係最高0.25。</p>
+          </div>
+
+          <div id="liveP3ConflictTestableRow" class="conditional-panel hidden">
+            <label class="toggle-row">
+              <input id="liveP3ConflictTestable" type="checkbox">
+              <span><strong>衝突順主判｜P3屬可接受0.25小注測試位</strong></span>
+            </label>
+          </div>
+
+          <div id="liveBothTransitionMajorP1Row" class="conditional-panel hidden">
+            <label class="toggle-row">
+              <input id="liveBothTransitionMajorP1" type="checkbox">
+              <span><strong>雙轉換P1屬清晰主要Range邊界</strong></span>
+            </label>
+          </div>
+
+          <div id="liveBothTransitionP3TestableRow" class="conditional-panel hidden">
+            <label class="toggle-row">
+              <input id="liveBothTransitionP3Testable" type="checkbox">
+              <span><strong>雙轉換P3係清晰可測試Range邊界</strong><small>只影響P3＋Q3嘅0.25／0。</small></span>
+            </label>
+          </div>
+
+          <div class="result-lines compact">
+            <div><span>Setup Type後有效位置</span><strong id="liveEffectivePosition">P2</strong></div>
+          </div>
+        </article>
+
+        <article class="card live-step">
+          <div class="live-step-title"><span>STEP 4</span><h2>Q質素</h2></div>
+          <label>
+            基礎Q
+            <select id="liveTriggerQuality">
+              <option value="Q3">Q3｜高質確認完整</option>
+              <option value="Q2" selected>Q2｜核心成立但有瑕疵</option>
+              <option value="Q1">Q1｜Setup失效｜0注</option>
+            </select>
+          </label>
+          <div class="result-lines compact">
+            <div><span>Setup Type修正後Q</span><strong id="liveEffectiveQ">Q2</strong></div>
+          </div>
+          <p class="state-note">V1.3：Native Q3／Q2永久分開；E／Session Edge唔再洗白Q2。Counter-main Q2目前Research only＝0。</p>
+        </article>
+
+        <article class="card live-step">
+          <div class="live-step-title"><span>STEP 5</span><h2>Range 25%＋大局障礙</h2></div>
+
+          <label>
+            次判轉換中性／Range位置修正
+            <select id="liveRangePosition">
+              <option value="notApplicable" selected>不適用｜次判唔係轉換中性</option>
+              <option value="favorable">相應25%｜Long底25%／Short頂25%｜不降級</option>
+              <option value="outside">唔喺相應25%｜降一級</option>
+              <option value="middle">真正Range正中｜0注</option>
+            </select>
+          </label>
+
+          <label class="toggle-row">
+            <input id="liveHasFirstObstacle" type="checkbox">
+            <span><strong>有第一真實障礙阻住</strong><small>冇就正常按Matrix；Tick後先計距離／類型。</small></span>
+          </label>
+
+          <div id="liveFirstObstaclePanel" class="conditional-panel hidden">
+            <label>
+              第一真實障礙距離 R
+              <input id="liveFirstObstacleR" type="number" step="0.1" min="0" inputmode="decimal" placeholder="例如 1.7">
+            </label>
+
+            <label>
+              障礙類型
+              <select id="liveObstacleKind">
+                <option value="soft" selected>普通／Soft｜日內／局部結構</option>
+                <option value="hard">重大HTF／Hard｜P1、大型Range、主判主結</option>
+              </select>
+            </label>
+
+            <label>
+              預定管理
+              <select id="liveObstacleManagementPlan">
+                <option value="normal" selected>正常／按結構管理</option>
+                <option value="rf">到障礙推RF</option>
+                <option value="partial">障礙前Partial＋餘倉RF</option>
               </select>
             </label>
           </div>
-          <label id="rangeBoundaryRow" class="toggle-row hidden"><input id="isClearRangeBoundary" type="checkbox"><span>位置係明確橫行邊界</span></label>
+
+          <select id="liveObstacle" class="hidden" hidden aria-hidden="true">
+            <option value="none" selected>冇第一真實障礙</option>
+            <option value="standard">≥2R｜Clean</option>
+            <option value="rfManaged">1.5R–&lt;2R</option>
+            <option value="veto">&lt;1.5R</option>
+            <option value="inside">重大HTF障礙</option>
+            <option value="pending">已Tick但未填距離</option>
+          </select>
+
+          <div id="liveRFManagedPanel" class="conditional-panel hidden">
+            <label class="toggle-row"><input id="liveObstacleSpaceBeyond" type="checkbox"><span>障礙後仍有清楚空間去2R</span></label>
+            <label class="toggle-row"><input id="liveObstacleRFPlan" type="checkbox"><span>事前寫明到障礙推RF，再博2R</span></label>
+          </div>
+
+          <div id="livePartialModePanel" class="conditional-panel hidden">
+            <label class="toggle-row"><input id="liveObstaclePartialPlan" type="checkbox"><span>30%–50%喺障礙食糊，餘倉推RF</span></label>
+            <label class="toggle-row"><input id="liveObstacleClearTransition" type="checkbox"><span>明確結構轉換Context成立</span></label>
+          </div>
+
+          <div id="liveHardObstaclePanel" class="conditional-panel hidden">
+            <label>
+              硬障礙處理
+              <select id="liveHardObstacleTreatment">
+                <option value="downgrade" selected>注碼下降一級</option>
+                <option value="partial">障礙前部分食糊｜不額外降注</option>
+                <option value="skip">必須突破先成立｜直接Skip</option>
+              </select>
+            </label>
+          </div>
         </article>
 
-        <article class="card">
-          <h2>交易方向與市場關係</h2>
+        <article class="card live-step">
+          <div class="live-step-title"><span>STEP 6</span><h2>最終注碼</h2></div>
+
+          <label class="toggle-row">
+            <input id="liveChase" type="checkbox">
+            <span>實際入場屬Chase</span>
+          </label>
+          <label class="toggle-row">
+            <input id="liveTimeRiskViolation" type="checkbox">
+            <span>違反交易時間／單日或總風險限制</span>
+          </label>
+
+          <div class="result-lines">
+            <div><span>市場關係上限</span><strong id="liveResultCap">1注</strong></div>
+            <div><span>Setup Type＋P × Q</span><strong id="liveMatrixSize">0.5注</strong></div>
+            <div><span>Range修正後</span><strong id="liveRangeSize">0.5注</strong></div>
+            <div><span>大局修正後</span><strong id="liveObstacleSize">0.5注</strong></div>
+            <div><span>Objective at Entry</span><strong id="liveTradeObjective">Reaction</strong></div>
+            <div id="livePrimaryCapReasonRow" class="hidden"><span>0.25 Primary Cap Reason</span><strong id="livePrimaryCapReason">N/A</strong></div>
+            <div id="liveAdditionalCapFlagsRow" class="hidden"><span>Additional Cap Flags</span><strong id="liveAdditionalCapFlags">N/A</strong></div>
+            <div><span>舊研究 Shadow（非 V1.4）</span><strong id="liveShadowSize">N/A</strong></div>
+          </div>
+
+          <div class="final-size live-final-size">
+            <span>V1.3 Production Final Size</span>
+            <strong id="liveFinalSize">0.5注</strong>
+          </div>
+          <div id="liveDecisionExplanation" class="live-decision-explanation"></div>
+        </article>
+      <article class="card candidate-card"><h2>V1.4 Candidate｜Live Shadow</h2><p class="state-note">沿用上面 V1.3 路線、P、Native Q 同 RR；補充以下 Candidate 條件。正式紀錄請用 Rulebook 入場快照。</p><div class="shadow-input-grid"><label class="toggle-row"><input id="livev14Boundary" type="checkbox"><span>真正 boundary / meaningful location</span></label><label class="toggle-row"><input id="livev14RangeMiddle" type="checkbox"><span>真正 Range middle（Candidate = 0）</span></label><label class="toggle-row"><input id="livev14ControlNegated" type="checkbox"><span>Retest 已否定 control（Candidate = 0）</span></label><label class="toggle-row"><input id="livev14OppositeAcceptance" type="checkbox"><span>Strong opposite acceptance（禁止 Runner）</span></label><label>Opening Context｜只作 Shadow 分組<select id="livev14OpeningContext"><option value="">未記錄</option><option value="Inside-Mid">Inside-Mid</option><option value="Inside-Edge">Inside-Edge</option><option value="Outside-Hold">Outside-Hold</option><option value="Outside-Fail">Outside-Fail</option></select></label><label>P3 Context<select id="livev14P3Context"><option value="">未分類</option><option value="PB">P3-PB</option><option value="MID">P3-MID</option><option value="EXT">P3-EXT</option></select></label><label class="toggle-row"><input id="livev14Structured" type="checkbox"><span>Structured Retest</span></label><label class="toggle-row"><input id="livev14CloseThrough" type="checkbox"><span>Retest Close Through</span></label><label class="toggle-row"><input id="livev14Q2R" type="checkbox"><span>Q2-R</span></label><label class="toggle-row"><input id="livev14Q2F" type="checkbox"><span>Q2-F</span></label><label class="toggle-row"><input id="livev14Q2D" type="checkbox"><span>Q2-D</span></label><label class="toggle-row"><input id="livev14Q2S" type="checkbox"><span>Q2-S</span></label><label class="toggle-row"><input id="livev14Q2RR" type="checkbox"><span>Q2-RR</span></label><label class="toggle-row"><input id="livev14CounterMain" type="checkbox"><span>Mixed Transition：今次逆 Main</span></label><label class="toggle-row"><input id="livev14HardConflict" type="checkbox"><span>兩層都 Healthy，但方向相反</span></label><label class="toggle-row"><input id="livev14DirectionalNeutral" type="checkbox"><span>H/I 路線實際為 Directional + Neutral</span></label><label class="toggle-row"><input id="livev14ActiveHtf" type="checkbox"><span>Active HTF reversal location</span></label><label class="toggle-row"><input id="livev14ClearTransfer" type="checkbox"><span>Clear sweep / reclaim / control transfer</span></label></div><div class="dual-track-grid"><div class="production-track">V1.3 Production<strong id="liveV13Size"></strong></div><div class="candidate-track">V1.4 Candidate<strong id="liveV14Size"></strong><span id="liveV14Objective"></span><span id="liveV14Runner"></span></div></div><p id="liveV14Reason" class="state-note"></p></article></form>
+
+      <article class="card live-one-line">
+        <h2>盤中六句</h2>
+        <ol>
+          <li>主判×次判係咩市場關係？今次做邊條路線？</li>
+          <li>Setup係Type A、B定C？</li>
+          <li>原始位置係P1、P2、P3定P4？Setup Type有冇有效待遇？</li>
+          <li>Q3、Q2定Q1？</li>
+          <li>次判轉換中性有冇Range 25%降級？第一障礙係Entry Obstacle定Target Obstacle？</li>
+          <li>所有限制取最低注碼。</li>
+        </ol>
+      </article>
+    </section>
+
+    <section id="rulebook" class="tab-panel">
+      <article class="card rulebook-hero">
+        <p class="eyebrow">ALL-MARKET MASTER TRADE MATRIX</p>
+        <h2>完整規則版</h2>
+        <p class="large-rule">方向權限 → 市場關係上限 → P位置 → Setup → Q質素 → 第一真實障礙／R:R → 最終注碼</p>
+        <p class="muted">全市場共用同一流程；大局只可限制方向、目標、注碼或否決空間不足，唔可以單獨加注。</p>
+      </article>
+
+      <article class="card shadow-research-panel">
+        <p class="eyebrow">2025 H2 BACKTEST OPERATING MATRIX + SHADOW RESEARCH OVERLAY</p>
+        <h2>Frozen V1.3｜研究Overlay</h2>
+        <p class="large-rule">當時Decision照Frozen V1.3；Shadow只記 Cap Reason / Objective Upgrade / Deep-RF Outcome / Strong data，唔准反改歷史判斷。</p>
+        <ul>
+          <li><strong>Research 1：</strong>0.25 P2Q3 Under-sizing｜Primary Cap Reason＋Additional Flags自動記。</li>
+          <li><strong>Research 2：</strong>Reaction-first → Expansion｜記Post-entry Objective Upgrade。</li>
+          <li><strong>Research 3：</strong>P2-E + Q2 × Market State × Control Alignment｜沿用Native Q2 Subtype。</li>
+          <li><strong>Research 4：</strong>Deep-RF Management｜記RF後原SL、Shadow MFE、No-RF counterfactual。</li>
+          <li><strong>Research 5：</strong>Strong Retest客觀化｜今版無market-data feed，所以唔加手填ATR負擔。</li>
+          <li><strong>Research 6：</strong>Instrument × Price-Action Regime × Loss Frequency｜沿用Instrument、Market State、Post-entry Price Pattern交叉研究。</li>
+        </ul>
+      </article>
+
+      <button id="quickNavToggle" class="quick-nav-toggle" type="button" aria-expanded="false" aria-controls="rulebookQuickNav">章節</button>
+      <aside id="rulebookQuickNav" class="quick-nav" aria-label="Rulebook章節快捷鍵">
+        <div class="quick-nav-header">
+          <strong>快速跳轉</strong>
+          <button id="quickNavClose" type="button" aria-label="關閉快捷導覽">×</button>
+        </div>
+        <button type="button" data-scroll-target="rbRecordMarket">紀錄／市場</button>
+        <button type="button" data-scroll-target="rbTimeframes">時間框架</button>
+        <button type="button" data-scroll-target="rbMarketState">Market State</button>
+        <button type="button" data-scroll-target="rbDirection">市場關係／方向</button>
+        <button type="button" data-scroll-target="rbSetupType">Setup Type</button>
+        <button type="button" data-scroll-target="rbPosition">位置P</button>
+        <button type="button" data-scroll-target="rbTriggerModel">Q Trigger</button>
+        <button type="button" data-scroll-target="rbTradeSpace">交易空間</button>
+        <button type="button" data-scroll-target="rbRangePosition">Range 25%</button>
+        <button type="button" data-scroll-target="rbObstacle">大局障礙</button>
+        <button type="button" data-scroll-target="rbDecisionResult">完整判斷</button>
+        <button type="button" data-scroll-target="rbJournal">結果／儲存</button>
+      </aside>
+
+      <form id="decisionForm" novalidate>
+        <article id="rbRecordMarket" class="card rulebook-anchor">
+          <h2>紀錄類型與市場</h2>
+
+          <div class="segmented">
+            <label>
+              <input type="radio" name="recordMode" value="Practice" checked>
+              <span>練習 Practice</span>
+            </label>
+            <label>
+              <input type="radio" name="recordMode" value="Live">
+              <span>實戰 Live</span>
+            </label>
+          </div>
+
+          <label>
+            市場分類
+            <select id="marketCode">
+              <option value="HSI">HSI</option>
+              <option value="UK100">UK100</option>
+              <option value="GER40">GER40</option>
+              <option value="FX" selected>外匯</option>
+              <option value="XAU">黃金</option>
+            </select>
+          </label>
+
+          <label>
+            核心Setup
+            <select id="setupTemplate"></select>
+          </label>
+          <p id="setupTemplateNote" class="state-note"></p>
+
+          <label>
+            品種
+            <input id="symbol" type="text" value="EURUSD" autocomplete="off" autocapitalize="characters">
+          </label>
+        </article>
+
+        <article id="rbTimeframes" class="card rulebook-anchor">
+          <h2>四個功能時間框架</h2>
+
+          <label>
+            快速配置
+            <select id="timeframePreset">
+              <option value="hsi">HSI｜4H／1H／15M／1M</option>
+              <option value="eu">UK100／GER40｜4H／1H／15M／5M</option>
+              <option value="fx" selected>外匯｜D／4H／1H／15M</option>
+              <option value="xau">黃金｜D／4H／1H／15M</option>
+              <option value="custom">自訂</option>
+            </select>
+          </label>
+
+          <div class="tf-grid">
+            <label>
+              大局背景層
+              <select id="backgroundTimeframe"></select>
+            </label>
+
+            <label>
+              主判斷層
+              <select id="mainTimeframe"></select>
+            </label>
+
+            <label>
+              次判斷層
+              <select id="secondaryTimeframe"></select>
+            </label>
+
+            <label>
+              入場觸發層
+              <select id="entryTimeframe"></select>
+            </label>
+          </div>
+
+          <p class="muted">
+            大局只可限制方向、目標、注碼或否決空間不足；唔可以單獨提高注碼。
+          </p>
+          <p id="marketTimeRuleNote" class="state-note"></p>
+        </article>
+
+        <article id="rbMarketState" class="card rulebook-anchor">
+          <h2>三層市場狀態</h2>
+
+          <label>
+            <span id="backgroundStateLabel">大局背景</span>
+            <select id="backgroundState"></select>
+          </label>
+          <p id="backgroundStateNote" class="state-note"></p>
+
+          <label>
+            <span id="mainStateLabel">主判斷</span>
+            <select id="mainState"></select>
+          </label>
+          <p id="mainStateNote" class="state-note"></p>
+
+          <label>
+            <span id="secondaryStateLabel">次判斷</span>
+            <select id="secondaryState"></select>
+          </label>
+          <p id="secondaryStateNote" class="state-note"></p>
+
+          <div class="result-lines compact">
+            <div><span>Transition Type</span><strong id="transitionTypeDisplay">N/A</strong></div>
+            <div><span>Control Alignment</span><strong id="controlAlignmentDisplay">Transitioning</strong></div>
+          </div>
+          <p id="controlAlignmentNote" class="state-note">V1.3研究欄位；暫時唔直接改Size。</p>
+
+          <div class="combined-deployment-box">
+            <div class="combined-deployment-title">
+              主判斷 × 次判斷｜部署建議
+            </div>
+            <div>
+              <span>優先部署</span>
+              <strong id="combinedPriorityDeployment"></strong>
+            </div>
+            <div>
+              <span>次要部署</span>
+              <strong id="combinedSecondaryDeployment"></strong>
+            </div>
+          </div>
+
+          <div class="state-deployment-disclaimer">
+            市場狀態由各TF自身結構決定；方向規則直接整合喺主判 × 次判市場關係。大局背景只負責順風／逆風、重大支持阻力、目標空間同必要降級。
+          </div>
+
+          <div class="principle-box">
+            <strong>主結未實收穿，一律最多只係弱勢；有效實收穿主結先進Transition。</strong>
+            <span>Wick穿、Sweep主結後收返、次結破、深回調，都唔等於轉換。</span>
+          </div>
+
+          <div class="principle-box">
+            <strong>市場狀態由每個時間框架自身結構決定。</strong>
+            <span>轉換偏升／偏跌只係客觀狀態描述，唔可以因為主判方向而夾硬改次判標籤。</span>
+          </div>
+        </article>
+
+        <article id="rbDirection" class="card rulebook-anchor">
+          <h2>主判 × 次判市場關係｜方向規則</h2>
+
           <div class="segmented">
             <label><input type="radio" name="direction" value="Long"><span>Long</span></label>
             <label><input type="radio" name="direction" value="Short" checked><span>Short</span></label>
           </div>
+
           <div class="result-lines compact">
-            <div><span>主判斷 × 次判斷</span><strong id="marketRelation"></strong></div>
-            <div><span>基本市場上限</span><strong id="marketCap"></strong></div>
-            <div><span>大局背景關係</span><strong id="backgroundRelation"></strong></div>
+            <div><span>主次市場關係</span><strong id="marketRelation"></strong></div>
+            <div><span>今次交易路線</span><strong id="marketRoute"></strong></div>
+            <div><span>交易優先方向</span><strong id="preferredDirection"></strong></div>
+            <div><span>市場最高注碼</span><strong id="marketCap"></strong></div>
+            <div><span>大局方向關係</span><strong id="backgroundRelation"></strong></div>
           </div>
+
+          <p id="priorityNote" class="muted"></p>
+
+          <div class="principle-box">
+            <strong>方向規則直接包含喺市場關係。</strong>
+            <span>雙同向只做共同方向；衝突順主判優先；包含轉換可順已確認方向，反向要等P1；雙轉換只做邊界。</span>
+          </div>
+
           <p id="backgroundRelationNote" class="muted"></p>
-          <label id="backgroundLevelRow" class="toggle-row hidden"><input id="atBackgroundSupportResistance" type="checkbox"><span>已到大局背景支持／阻力位</span></label>
-          <p id="backgroundLevelNote" class="state-note hidden">只有「逆健康大局背景＋已到大局支持／阻力位」先會將最高注碼封頂 0.5 注；未到大局位不影響原本矩陣注碼。</p>
         </article>
 
-        <article class="card">
-          <h2>位置級別</h2>
-          <label>位置
+        <article id="rbSetupType" class="card two-b-card rulebook-anchor">
+          <h2>Setup類型｜市場故事</h2>
+          <p class="muted">Setup唔會創造方向權限；P評位置，Q評Trigger。UK100／GER40嘅Asia 2B during POR已刪除。</p>
+
+          <label>
+            Setup Type
+            <select id="setupType">
+              <option value="A">Type A｜高質Session 2B</option>
+              <option value="B" selected>Type B｜普通Sweep＋Reclaim</option>
+              <option value="C">Type C｜Breakout／No Sweep</option>
+            </select>
+            <small>市場Setup會自動分類；「自訂」可手動揀候選Type，但Type A仍須核心Setup身份屬指定Session 2B。</small>
+          </label>
+          <p><strong>分類：</strong> <span id="setupClassification">Type B</span></p>
+
+          <div id="previousHLSweepPanel" class="conditional-panel hidden">
+            <div class="principle-box">
+              <strong>Previous High / Low Sweep</strong>
+              <span>先記被Sweep嘅Liquidity Pool，再記Sweep發生Session。Native Q仍然由Sweep／Reclaim／Retest Price Action決定。</span>
+            </div>
+
+            <label>
+              被Sweep嘅Previous H/L
+              <select id="prevHLSource">
+                <option value="pdhPdl" selected>PDH／PDL｜Previous Day H/L</option>
+                <option value="pwhPwl">PWH／PWL｜Previous Week H/L</option>
+              </select>
+            </label>
+
+            <label>
+              Sweep發生Session
+              <select id="prevHLSession">
+                <option value="asia" selected>Asia時段 Sweep</option>
+                <option value="europe">Europe／London時段 Sweep</option>
+              </select>
+            </label>
+
+            <p class="state-note">XAU：PWH/PWL、PDH/PDL高質Sweep＝E+；FX：同樣記Liquidity＋Session，但今版唔自動取得E或P升級。</p>
+          </div>
+
+          <div id="xauLiquidityPanel" class="conditional-panel hidden">
+            <div class="principle-box">
+              <strong>XAU Liquidity優先級</strong>
+              <span>HTF Location Sweep ≥ PWH／PWL＋HTF ≈ PDH／PDL＋HTF ＞ 純PWH／PWL ≈ 純PDH／PDL ＞ Asia H/L＋Structure ＞ 純Asia H/L。</span>
+            </div>
+
+            <label id="xauLiquiditySourceRow">
+              XAU被Sweep嘅Liquidity來源
+              <select id="xauLiquiditySource">
+                <option value="htfMajor">HTF主結／Major Swing／HTF Range／重要前Swing</option>
+                <option value="pwhPwl">PWH／PWL｜Previous Week H／L</option>
+                <option value="pdhPdl">PDH／PDL</option>
+                <option value="monHL">Mon H／Mon L</option>
+                <option value="asiaHL">Asia H／Asia L</option>
+                <option value="oprHL">OPR H／OPR L</option>
+                <option value="other" selected>其他／未指定</option>
+              </select>
+            </label>
+
+            <label id="xauSweepSessionRow">
+              Sweep發生時段
+              <select id="xauSweepSession">
+                <option value="asia">Asia時段</option>
+                <option value="london">London／Europe時段</option>
+                <option value="other" selected>其他／未指定Session</option>
+              </select>
+            </label>
+
+            <div class="result-lines compact">
+              <div><span>Liquidity級別</span><strong id="xauLiquidityRank">未分級</strong></div>
+              <div><span>E標記</span><strong id="xauEdgeMarker">無E標記</strong></div>
+              <div><span>原生P＋E顯示</span><strong id="xauPositionEdgeLabel">P2</strong></div>
+              <div><span>XAU打法優先級</span><strong id="xauSetupPriority">N/A</strong></div>
+            </div>
+            <p id="xauLiquidityNote" class="state-note"></p>
+            <p class="muted"><strong>V1.3：Raw P同Execution P永久分開；Native Q亦永久保留。</strong>PWH／PWL、PDH／PDL高質Sweep＝E+；Asia／OPR高質Sweep＝E。E可令Raw P3獲P2-effective，但絕對唔會將Q2改名Q3，亦唔會P2升P1。</p>
+          </div>
+
+          <div id="typeAPanel" class="conditional-panel hidden">
+            <label>
+              指定Session 2B方向
+              <select id="asia2BType">
+                <option value="asiaTop">Sweep指定Session頂｜偏Short</option>
+                <option value="asiaBottom">Sweep指定Session底｜偏Long</option>
+              </select>
+            </label>
+            <p id="typeALiquidityNote" class="state-note"></p>
+
+            <div id="asia2BChecklist">
+              <label class="toggle-row"><input id="asia2BClearLiquidity" type="checkbox"><span>指定Session H／L係明確流動性池</span></label>
+              <label class="toggle-row"><input id="asia2BCleanSweep" type="checkbox"><span>Sweep乾淨，唔係反覆穿插</span></label>
+              <label class="toggle-row"><input id="asia2BReclaimBreak" type="checkbox"><span>Reclaim收復關鍵位並破微結構</span></label>
+              <label class="toggle-row"><input id="asia2BWeakRetest" type="checkbox"><span>Retest明顯較慢、較弱</span></label>
+              <label class="toggle-row"><input id="asia2BVolumeSupport" type="checkbox"><span>Volume／RVOL支持（只作輔助）</span></label>
+              <label class="toggle-row"><input id="asia2BNoDoubleSweep" type="checkbox"><span>沒有頂底雙邊掃</span></label>
+            </div>
+
+            <p class="state-note">方向一致＋5／6或以上先屬高質Type A。只有HSI OPR、FX Asia／OPR、EU正式開市後POR 2B有特殊待遇；XAU V1.27.0起改用專用Liquidity Matrix。</p>
+          </div>
+
+          <div id="typeBPanel" class="conditional-panel">
+            <p><strong>Type B：</strong>一般市場普通Liquidity Sweep＋Reclaim冇自動P／Q升級；XAU另按專用PWH／PWL、PDH／PDL E+同Asia H/L E位置Enhancement規則處理。</p>
+            <p class="state-note"><strong>V1.28.1：</strong>XAU-B同FX-B Previous H/L Sweep都會獨立記錄「PDH/PDL 或 PWH/PWL」＋「Asia 或 Europe/London Sweep」。FX呢個新Setup暫時冇E；XAU沿用E+規則。</p>
+          </div>
+
+          <div id="typeCPanel" class="conditional-panel hidden">
+            <p id="typeCVariantNote"><strong>Type C：</strong>按Breakout、Full Repair或No-Sweep子類型評估。</p>
+
+            <div id="breakoutSetupPanel" class="conditional-panel hidden">
+              <label class="toggle-row"><input id="validBreakout" type="checkbox"><span>有效Breakout／Opening Drive</span></label>
+              <label class="toggle-row"><input id="validAcceptance" type="checkbox"><span>突破後有Acceptance</span></label>
+              <label class="toggle-row"><input id="firstRetest" type="checkbox"><span>第一次Retest／首次回測</span></label>
+              <label>
+                Breakout／Acceptance質素
+                <select id="breakoutQuality">
+                  <option value="strong">乾淨／有Follow-through</option>
+                  <option value="ordinary" selected>有效但只屬合格</option>
+                  <option value="negated">重新Acceptance返原Range／被否定</option>
+                </select>
+              </label>
+            </div>
+
+            <div id="fullRepairPanel" class="conditional-panel hidden">
+              <label class="toggle-row"><input id="fullRepairComplete" type="checkbox"><span>正式開市後已完整修復整個POR</span></label>
+              <label id="fullRepairAsiaSweepRow" class="toggle-row hidden"><input id="fullRepairAsiaSweep" type="checkbox"><span>同一Opening Story有Asia H／L Sweep｜EU-D只作Tag，唔Double E／Size</span></label>
+              <label class="toggle-row"><input id="fullRepairEntryOutside" type="checkbox"><span>成交前重新Reclaim POR外側邊界；入場位喺POR外</span></label>
+              <label class="toggle-row"><input id="fullRepairAcceptedBackInside" type="checkbox"><span>已喺POR內重新形成Acceptance｜勾選即失效</span></label>
+            </div>
+
+            <div id="postOpenConfirmationPanel" class="conditional-panel hidden">
+              <label class="toggle-row"><input id="postOpenAsiaSweep" type="checkbox"><span>POR期間已Sweep Asia H／L</span></label>
+              <label class="toggle-row"><input id="postOpenAfterOpen" type="checkbox"><span>確認發生喺正式現貨開市後</span></label>
+              <label class="toggle-row"><input id="postOpenDriveConfirmed" type="checkbox"><span>Opening Drive方向清楚，冇立即被否定</span></label>
+              <label class="toggle-row"><input id="postOpenPreOpenEntry" type="checkbox"><span>曾喺開市前直接以Asia 2B入場｜勾選即失效</span></label>
+              <p class="state-note">Asia Sweep只係背景；正式開市後破結構＋第一次弱Retest先入場。</p>
+            </div>
+
+            <div id="openingDriveValidityPanel" class="conditional-panel hidden">
+              <label>
+                Opening Drive有效期
+                <select id="openingDriveStatus">
+                  <option value="fresh" selected>同一Opening Drive｜第一次實質Retest</option>
+                  <option value="delayed">延遲但仍屬原故事｜Entry-time Q重評</option>
+                  <option value="expired">已完成新結構循環／新Range／重新Acceptance｜過期</option>
+                </select>
+              </label>
+              <p class="state-note">完成新結構循環、形成新Range或重新Acceptance返POR＝Setup過期。</p>
+            </div>
+
+            <div id="p1NoSweepPanel" class="conditional-panel hidden">
+              <label class="toggle-row"><input id="noSweepRejection" type="checkbox"><span>真正P1位置有明顯Rejection</span></label>
+            </div>
+
+            <div id="trendPullbackPanel" class="conditional-panel hidden">
+              <label class="toggle-row"><input id="strongTrendContext" type="checkbox"><span>強趨勢Context成立</span></label>
+              <label class="toggle-row"><input id="trueStructureRetest" type="checkbox"><span>Pullback回到真正結構</span></label>
+              <label class="toggle-row"><input id="trendFirstRetest" type="checkbox"><span>第一次受控Retest</span></label>
+            </div>
+
+            <div id="hsiOprContinuationPanel" class="conditional-panel hidden">
+              <div class="principle-box"><strong>HSI-C｜OPR Continuation & Retest</strong><span>主判＋次判必須雙同向，Trade亦必須順主／次判；OPR Direction Context只作Subtype Research，唔改Frozen Size。</span></div>
+              <label class="toggle-row"><input id="hsiOprWindowComplete" type="checkbox"><span>09:15–09:30 OPR已完成</span></label>
+              <label class="toggle-row"><input id="hsiOprAfter0930" type="checkbox"><span>Full Reclaim／Break發生喺09:30後</span></label>
+              <label class="toggle-row"><input id="hsiOprTrendAligned" type="checkbox"><span>主判＋次判方向一致，而且Trade方向順主判／次判</span></label>
+
+              <label>
+                OPR Direction Context
+                <select id="hsiOprDirectionContext">
+                  <option value="" selected>請選擇Subtype</option>
+                  <option value="alignedTrend">順向順勢｜OPR方向＝主判／次判＝Trade方向</option>
+                  <option value="reverseOprTrend">反向順勢｜OPR方向逆主判／次判；Trade仍順主／次判</option>
+                </select>
+              </label>
+              <p class="state-note"><strong>順向順勢：</strong>HTF ↑＋OPR ↑＋Trade ↑（Short鏡像）。<br><strong>反向順勢：</strong>HTF ↑＋OPR ↓＋Trade ↑（Short鏡像）。「反向」只指OPR逆HTF，唔係Trade逆勢。</p>
+            </div>
+          </div>
+
+          <div class="result-lines compact">
+            <div><span>有效Setup Type</span><strong id="effectiveSetupType">Type B</strong></div>
+            <div><span>Type A質素</span><strong id="asia2BQuality">N/A</strong></div>
+            <div><span>位置待遇</span><strong id="asia2BPositionEffect">無特殊待遇</strong></div>
+            <div><span>Q待遇</span><strong id="asia2BTriggerEffect">無特殊待遇</strong></div>
+          </div>
+
+          <p class="muted">V1.3：E只係Instrument／Session-specific Edge。高質Type A／XAU指定Liquidity可以令Raw P3→P2-effective，但<strong>取消所有Q2→Q3升級</strong>；Native Q永遠保留，亦唔會創造方向權限。</p>
+        </article>
+
+        <article class="card"><div class="shared-e-panel"><h3>共用 E Source｜V1.3 + V1.4</h3><label>E Source<select id="sharedESource"><option value="auto">沿用原 Setup／XAU E Source</option><option value="monHL">Mon H/L</option><option value="pdhPdl">PDH / PDL（FX / XAU）</option><option value="oprHL">OPR H/L</option><option value="htfMajor">Active HTF Structure / Liquidity</option></select></label><label class="toggle-row"><input id="sharedEFirst" type="checkbox"><span>First meaningful sweep</span></label><label class="toggle-row"><input id="sharedEFresh" type="checkbox"><span>Fresh level｜未消耗</span></label><label class="toggle-row"><input id="sharedEActive" type="checkbox"><span>Active HTF structure（只限 HTF Source）</span></label><p class="state-note">Mon／PDH-PDL／OPR／HTF Source 兩套共用；只限 Sweep／Reclaim。P3 可成 P2-E，Native Q 保留；方向、P4、時間及 RR 限制仍有效。HSI-C Continuation 唔會因 OPR 名稱自動取得 E。</p><p id="sharedEStatus" class="state-note"></p></div></article>
+        <article id="rbPosition" class="card rulebook-anchor">
+          <h2>位置P｜方向例外／逆主判資格</h2>
+          <p class="muted">P只評Entry zone。Session線、Fib同Setup名稱唔會自動升P；隱藏Fib後裸圖仍會畫出先算真實結構。</p>
+
+          <label>
+            原始入場位置
             <select id="positionLevel">
-              <option value="P1">P1｜最高級位置</option>
-              <option value="P2" selected>P2｜高質工作位置</option>
-              <option value="P3">P3｜次級位置</option>
-              <option value="P4">P4｜無交易位置</option>
+              <option value="P1">P1｜大局級位置</option>
+              <option value="P2" selected>P2｜重要工作位置</option>
+              <option value="P3">P3｜普通局部位置</option>
+              <option value="P4">P4｜無價值位置</option>
             </select>
           </label>
-          <h3 id="positionTitle"></h3><p id="positionNote" class="muted"></p>
-        </article>
 
-        <article class="card">
-          <h2>Trigger 1｜Sweep 與 Reclaim</h2>
-          <label class="toggle-row"><input id="meaningfulSweep" type="checkbox"><span><strong>有效 Sweep</strong><small>掃走 Asia／OPR／PDH／PDL／前 Swing／主結或區間邊界。</small></span></label>
-          <label class="toggle-row"><input id="reclaimedSweepLevel" type="checkbox"><span><strong>收復 Sweep 位置</strong><small>價格真正收返關鍵位。</small></span></label>
-          <label class="toggle-row"><input id="brokeSweepMicroStructure" type="checkbox"><span><strong>破壞造成 Sweep 嗰段微結構</strong><small>重新破壞 micro swing／pause candle 方向。</small></span></label>
-          <label class="toggle-row"><input id="recoveredImpulseOrigin" type="checkbox"><span><strong>收復 pause candle／impulse origin</strong><small>加分項；未做到會記錄為瑕疵。</small></span></label>
-          <label>Reclaim 後 Follow-through
-            <select id="followThrough"><option value="none">冇 Follow-through</option><option value="ordinary">一般／不足</option><option value="strong">明顯</option></select>
+          <h3 id="positionTitle"></h3>
+          <p id="positionNote" class="muted"></p>
+
+          <div id="p3ContextPanel" class="conditional-panel hidden">
+            <div class="principle-box">
+              <strong>P3 Context｜V1.3 記錄／V1.4 計算</strong>
+              <span>PB／MID／EXT只記Raw P3來源，唔改Frozen V1.3 Size。Raw P3有合資格E時，三類都照原規則取得P2-E待遇。</span>
+            </div>
+
+            <label>
+              P3 Context
+              <select id="p3Context">
+                <option value="" selected>未分類</option>
+                <option value="PB">P3-PB｜Pullback</option>
+                <option value="MID">P3-MID｜Neutral / Mid-location</option>
+                <option value="EXT">P3-EXT｜Extension</option>
+              </select>
+            </label>
+
+            <p class="state-note">
+              記錄鏈：<strong>Raw P3 → P3-PB／P3-MID／P3-EXT → E → Execution P</strong>。
+              <br><strong>PB：</strong>明確回調到次判次結／working support附近，有location advantage。
+              <br><strong>MID：</strong>已離開次判次結，但未去到最新走勢尾部；位置中性，唔算靚pullback亦唔算chase。
+              <br><strong>EXT：</strong>已去到最新走勢較尾／premium區（Short鏡像discount區），冇真正pullback再做順勢setup。
+              <br>2025 H2三類完全唔額外升／降注；暫時唔加Fib threshold，只用結構語義分類。
+            </p>
+          </div>
+
+          <label>
+            大局實際結構重疊
+            <select id="backgroundDirectOverlap">
+              <option value="no" selected>冇｜Entry zone本身冇HTF真實結構交集</option>
+              <option value="yes">有｜Entry zone同HTF真實價格結構直接重疊</option>
+            </select>
+          </label>
+          <p id="backgroundOverlapNote" class="state-note"></p>
+
+          <label>
+            P1順風
+            <select id="p1BackgroundTailwind">
+              <option value="no" selected>冇</option>
+              <option value="valid">有｜仍有效：價格觸及P1後第一段真實反應</option>
+              <option value="expired">曾有，但已失效／被反覆消耗</option>
+            </select>
+          </label>
+          <p id="p1TailwindNote" class="state-note"></p>
+
+          <div id="counterP2WeakPermissionPanel" class="conditional-panel hidden">
+            <div class="principle-box">
+              <strong>逆弱主判只認Route A／Route B</strong>
+              <span>P1、P2、P2-E都一樣：Route A或B完整成立＋Native Q3先最高0.25；冇Route＝0。P1順風可以照記，但唔係K嘅第三條Permission。</span>
+            </div>
+
+            <label>
+              逆弱主判｜Route A／B Confirmation
+              <select id="counterP2WeakPermissionPath">
+                <option value="none" selected>冇A／B｜逆弱主判正常0</option>
+                <option value="weakBreakRetest">Route A｜主判次結／工作結構Break＋Acceptance＋首次Retest</option>
+                <option value="weakFreshSession">Route B｜健康次判＋新Session獨立Confirmation</option>
+              </select>
+            </label>
+
+            <input id="counterP2WeakBreakRetest" type="checkbox" hidden>
+
+            <div id="counterP2WeakFreshSessionPanel" class="conditional-panel hidden">
+              <div class="principle-box">
+                <strong>Route B｜Fresh Session Confirmation</strong>
+                <span>弱主判＋健康逆向次判＋P1/P2/P2-E＋Native Q3＋全新獨立Session Confirmation。以下工作結構／距離／腿成熟度欄位保留做研究記錄，但V1.28.3唔再係Route B硬性Size gate。</span>
+              </div>
+
+              <label class="toggle-row">
+                <input id="counterP2WeakWorkStructureHeld" type="checkbox">
+                <span><strong>研究記錄｜主判近端次結／工作結構已逆向有效突破</strong><small>可記，但唔再係Route B必須條件。</small></span>
+              </label>
+
+              <label class="toggle-row">
+                <input id="counterP2WeakIndependentSession" type="checkbox">
+                <span><strong>今次係全新、獨立Session催化</strong><small>唔係繼續借用已過期嘅主判次結首次Retest故事。</small></span>
+              </label>
+
+              <label class="toggle-row">
+                <input id="counterP2WeakEquivalentSessionSetup" type="checkbox">
+                <span><strong>其他同級高質開市後Setup</strong><small>EU-B／EU-D會由App自動識別；只有其他同級Sweep／Reclaim Setup先勾。</small></span>
+              </label>
+
+              <label>
+                去主判主結／第一硬障礙距離（R）
+                <input id="counterP2WeakHardObstacleR" type="number" min="0" step="0.1" inputmode="decimal" placeholder="研究記錄｜最終RR由Obstacle規則處理">
+              </label>
+
+              <label class="toggle-row">
+                <input id="counterP2WeakNotMatureLeg" type="checkbox">
+                <span><strong>研究記錄｜未處於次判成熟逆向腿尾段</strong><small>保留做後續統計，唔直接改Route B size。</small></span>
+              </label>
+
+              <label class="toggle-row">
+                <input id="counterP2WeakNotNearMainStructure" type="checkbox">
+                <span><strong>研究記錄｜未貼近主判主結／第一硬障礙</strong><small>最終空間由Obstacle/RR層獨立處理。</small></span>
+              </label>
+
+              <p id="counterP2WeakFreshSessionSetupNote" class="state-note"></p>
+            </div>
+          </div>
+
+          <p id="counterP2EligibilityNote" class="state-note hidden"></p>
+
+          <label id="htfP1ReversalExceptionRow" class="toggle-row hidden">
+            <input id="htfP1ReversalException" type="checkbox">
+            <span><strong>窄義HTF P1反轉例外完整成立</strong><small>Daily／Weekly P1＋原生至少P2＋Q3＋對應Setup模型嘅等價右側確認＋第一段新鮮反應；最高0.25 Probe。</small></span>
+          </label>
+
+          <label id="transitionLayerP1Row" class="toggle-row hidden">
+            <input id="transitionLayerP1" type="checkbox">
+            <span><strong>主判Transition反向｜清晰HTF P1／主要Range Boundary</strong><small>只限P1＋Native Q3，最高0.25 Reaction Probe。</small></span>
+          </label>
+
+          <label id="p3ConflictTestableRow" class="toggle-row hidden">
+            <input id="p3ConflictTestable" type="checkbox">
+            <span><strong>衝突順主判｜P3屬可接受小注測試位</strong><small>只影響P3＋Q3嘅0.25／0。</small></span>
+          </label>
+
+          <label id="bothTransitionMajorP1Row" class="toggle-row hidden">
+            <input id="bothTransitionMajorP1" type="checkbox">
+            <span><strong>雙轉換P1屬清晰主要Range邊界</strong><small>P1 Q3按0.5；Q2按0.25。</small></span>
+          </label>
+
+          <label id="bothTransitionP3TestableRow" class="toggle-row hidden">
+            <input id="bothTransitionP3Testable" type="checkbox">
+            <span><strong>雙轉換P3係清晰可測試Range邊界</strong><small>P3 Q3可0.25；否則0。</small></span>
           </label>
         </article>
 
-        <article class="card">
-          <h2>Trigger 2｜Reclaim 動能</h2>
-          <p>以下五項最少兩項成立。現時：<strong id="momentumCount">0／5</strong></p>
-          <label class="toggle-row"><input id="momentumStrongBody" type="checkbox"><span>實體比例高</span></label>
-          <label class="toggle-row"><input id="momentumCloseNearExtreme" type="checkbox"><span>收近燭頂／燭底</span></label>
-          <label class="toggle-row"><input id="momentumBrokeMicroSwing" type="checkbox"><span>突破 micro swing</span></label>
-          <label class="toggle-row"><input id="momentumRVOL" type="checkbox"><span>有 RVOL 支持</span></label>
-          <label class="toggle-row"><input id="momentumCleanerThanPriorMove" type="checkbox"><span>Reclaim 比原方向推動更乾淨</span></label>
-        </article>
+        <article id="rbTriggerModel" class="card trigger-model-card rulebook-anchor">
+          <h2>Trigger質素Q</h2>
 
-        <article class="card">
-          <h2>Trigger 3｜Retest 相對弱</h2>
-          <label class="toggle-row"><input id="retestSlower" type="checkbox"><span>Retest 速度慢過 Reclaim</span></label>
-          <label class="toggle-row"><input id="retestWeakerCandles" type="checkbox"><span>Retest 單燭力度較弱</span></label>
-          <label>Retest 深度
-            <select id="retestDepth"><option value="invalid">深過 0.88｜原 Trigger 失效</option><option value="imperfect">0.786–0.88｜扣分</option><option value="normal">0.5–0.786｜正常</option></select>
+          <div id="sweepReclaimTriggerFields">
+            <label class="toggle-row">
+              <input id="validSweep" type="checkbox">
+              <span><strong>有效Sweep</strong><small>Type A／B需要真正Liquidity Sweep。</small></span>
+            </label>
+
+            <label class="toggle-row">
+              <input id="validReclaim" type="checkbox">
+              <span><strong>有效Reclaim</strong><small>收復關鍵位，而且冇立即被吞。</small></span>
+            </label>
+
+            <label>
+              Sweep／Reclaim質素
+              <select id="reclaimQuality">
+                <option value="strong">乾淨／明確</option>
+                <option value="ordinary" selected>有效但質素處於邊緣</option>
+                <option value="negated">失敗／被吞噬／否定</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="toggle-row">
+            <input id="microStructureShift" type="checkbox">
+            <span><strong>破微結構／清晰控制權轉移</strong><small>Q3核心之一；缺少通常最多Q2。</small></span>
           </label>
-          <label id="secondConfirmationRow" class="toggle-row"><input id="secondConfirmationAfterDeepRetest" type="checkbox"><span>深過 0.88 後已重新 Reclaim＋第二次確認</span></label>
-          <label class="toggle-row"><input id="retestLowerVolume" type="checkbox"><span>Retest 成交量低過 Reclaim</span></label>
-          <p>Retest 四項合格：<strong id="retestCount">0／4</strong></p>
-        </article>
 
-        <article class="card">
-          <h2>Trigger 4｜交易空間與確認層級</h2>
-          <div class="result-lines compact"><div><span>入場觸發層</span><strong id="entryTimeframeTriggerDisplay"></strong></div></div>
-          <label>到第一真實目標嘅空間
-            <select id="tradeSpace"><option value="insufficient">不足｜第一真實目標前冇合理 R:R</option><option value="slightlyShort">略短｜仍可管理但要降級</option><option value="enough">足夠｜到第一真實目標接近或多過 1:2</option></select>
+          <label>
+            Retest質素
+            <select id="retestQuality">
+              <option value="weak">明顯較弱｜受控</option>
+              <option value="imperfect" selected>有一項瑕疵但故事仍成立</option>
+              <option value="invalid">快＋深＋強｜否定Setup</option>
+            </select>
           </label>
-          <label class="toggle-row"><input id="onlyEntryLayerConfirmation" type="checkbox"><span>只得入場觸發層確認，未有更高級別配合</span></label>
+
+          <div class="conditional-panel">
+            <strong>Q2 Subtype｜可以疊加</strong>
+            <label class="toggle-row"><input id="q2FastRetest" type="checkbox"><span><strong>Q2-F｜Fast Retest</strong><small>時間短、overlap少、progression efficiency高，但未足以Invalid。</small></span></label>
+            <label class="toggle-row"><input id="q2DeepRetest" type="checkbox"><span><strong>Q2-D｜Deep Retest</strong><small>約0.786–0.88；接近1／impulse origin重新Acceptance應判Q1。</small></span></label>
+            <label class="toggle-row"><input id="q2StrongRetest" type="checkbox"><span><strong>Q2-S｜Strong Retest</strong><small>反向K／displacement偏強，但未建立完整反方向Control。</small></span></label>
+            <p class="state-note">Q2-R由Reclaim／Acceptance普通自動標記；Q2-RR只會喺有Tick第一障礙而距離1.5R–&lt;2R時自動標記。F＋D＋S同時成立通常直接Q1。</p>
+          </div>
+
+          <div class="principle-box">
+            <strong>Retest判斷優先次序</strong>
+            <span>價格推進效率 → 深度 → K線及Sequence力度 → 所需時間 → Volume。低Volume唔可以救快速、深、有效率Retest。</span>
+          </div>
         </article>
 
+        <div id="rbTradeSpace" class="hidden" hidden aria-hidden="true">
+          <input id="tradeSpace" type="hidden" value="full">
+          <input id="obstacleState" type="hidden" value="standard">
+          <div id="rfManagedPanel" class="hidden">
+            <input id="obstacleSpaceBeyond" type="checkbox" hidden>
+            <input id="obstacleRFPlan" type="checkbox" hidden>
+          </div>
+          <div id="partialObstaclePanel" class="hidden">
+            <input id="obstaclePartialPlan" type="checkbox" hidden>
+            <input id="obstacleClearTransition" type="checkbox" hidden>
+          </div>
+          <div id="hardObstacleTreatmentPanel" class="hidden">
+            <select id="hardObstacleTreatment"><option value="downgrade" selected></option></select>
+          </div>
+          <input id="insideMajorObstacle" type="checkbox" hidden>
+        </div>
+
         <article class="card">
-          <h2>Trigger 自動評級</h2>
-          <div class="grade-line"><span>評級</span><strong id="triggerGrade" class="grade q1"></strong></div>
+          <h2>Q自動評級</h2>
+          <div class="result-lines compact">
+            <div><span>基礎Q</span><strong id="preBonusTriggerGrade">Q1</strong></div>
+            <div><span>Setup Type修正後Q</span><strong id="baseTriggerGrade" class="grade q1">Q1｜失效</strong></div>
+          </div>
           <div id="triggerEvaluation"></div>
         </article>
 
-        <article class="card">
-          <h2>硬性否決條件</h2>
-          <label class="toggle-row"><input id="chasedBreakout" type="checkbox"><span>突破線後立即追價</span></label>
-          <label class="toggle-row"><input id="after1030" type="checkbox"><span>超過 10:30 入場限制</span></label>
-          <label class="toggle-row"><input id="usdRiskExceeded" type="checkbox"><span>同一美元方向總風險超標</span></label>
-          <label class="toggle-row"><input id="loosenedTriggerBecauseBias" type="checkbox"><span>因方向偏升／跌而放寬 Trigger</span></label>
-          <label class="toggle-row"><input id="emotionalSizing" type="checkbox"><span>因連贏／連輸／特別有信心而加注</span></label>
+        <article id="rbRangePosition" class="card rulebook-anchor">
+          <h2>次判轉換中性｜Range 25%修正</h2>
+          <div id="secondaryRangePanel" class="conditional-panel hidden">
+            <label>
+              Entry喺次判Range邊個位置
+              <select id="secondaryRangePosition">
+                <option value="favorable" selected>相應25%｜Long底25%／Short頂25%｜不降級</option>
+                <option value="outside">唔喺相應頂／底25%｜降一級</option>
+                <option value="middle">真正Range正中／冇邊界Edge｜0注</option>
+              </select>
+            </label>
+          </div>
+          <p id="secondaryRangeNote" class="state-note">只有次判＝轉換中性時啟用；修正只改Size，唔改P級。</p>
         </article>
 
-        <article class="card result-card">
-          <h2>V3.4 最終結果</h2>
+        <article id="rbObstacle" class="card obstacle-card rulebook-anchor">
+          <h2>障礙速查</h2>
+          <p class="large-rule">冇第一真實障礙＝正常按Matrix｜≥2R＝正常／Expansion候選｜1.5R–&lt;2R＝Reaction＋RF／Partial｜重大HTF障礙＝降一級｜&lt;1.5R＝RR Veto</p>
+
+          <label class="toggle-row">
+            <input id="hasFirstObstacle" type="checkbox">
+            <span><strong>有第一真實障礙阻住</strong><small>只係真係有一個會影響今次Trade管理／空間嘅障礙先Tick；冇就唔套Obstacle限制。</small></span>
+          </label>
+
+          <div id="firstObstaclePanel" class="conditional-panel hidden">
+            <label>
+              第一真實障礙距離 R
+              <input id="firstObstacleR" type="number" step="0.1" min="0" inputmode="decimal" placeholder="例如 1.7">
+            </label>
+
+            <label>
+              障礙類型
+              <select id="obstacleKind">
+                <option value="soft" selected>普通／Soft｜日內、局部結構</option>
+                <option value="hard">重大HTF／Hard｜P1、大型Range、主判主結</option>
+              </select>
+            </label>
+
+            <label>
+              預定管理
+              <select id="obstacleManagementChoice">
+                <option value="normal" selected>正常／按結構管理</option>
+                <option value="rf">到障礙推RF</option>
+                <option value="partial">障礙前Partial＋餘倉RF</option>
+              </select>
+            </label>
+
+            <div class="result-lines compact">
+              <div><span>障礙Band</span><strong id="obstacleBandLabel">未填</strong></div>
+              <div><span>管理提示</span><strong id="obstacleManagementLabel">未填</strong></div>
+            </div>
+            <p id="obstacleNote" class="state-note"></p>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>五項硬性否決</h2>
+
+          <p class="muted">
+            五個Hard Veto：P4／Range中間／追價；冇有效Sweep-Reclaim或Breakout Setup；Retest快深強；已Tick第一真實障礙而距離低於1.5R，或者未填距離；違反時間／風險。
+          </p>
+
+          <label class="toggle-row">
+            <input id="chasedBreakout" type="checkbox">
+            <span>P4中間位以外，仍屬突破後立即追價</span>
+          </label>
+
+          <label class="toggle-row">
+            <input id="violatesTradingTime" type="checkbox">
+            <span id="tradingTimeRuleLabel">違反交易時間限制</span>
+          </label>
+
+          <label class="toggle-row">
+            <input id="riskLimitExceeded" type="checkbox">
+            <span>總風險／相關方向風險超過上限</span>
+          </label>
+
+          <div id="hardVetoPreview" class="veto-preview"></div>
+        </article>
+
+        <article class="card">
+          <h2>紀律／統計標籤</h2>
+          <p class="muted">以下唔再自動當硬性否決，但會記錄同提示。</p>
+
+          <label class="toggle-row"><input id="loosenedTriggerBecauseBias" type="checkbox"><span>曾因主觀方向偏見想放寬Trigger</span></label>
+          <label class="toggle-row"><input id="emotionalSizing" type="checkbox"><span>曾因連贏／連輸／特別有信心想加注</span></label>
+        </article>
+
+        <article class="card candidate-card"><h2>V1.4 Candidate｜入場時資料</h2><p class="state-note">Retest Internal Structure／Acceptance 同 Q2 tags 用下方原有欄位。呢度只影響 Candidate。</p><div class="shadow-input-grid"><label class="toggle-row"><input id="v14Boundary" type="checkbox"><span>真正 boundary / meaningful location</span></label><label class="toggle-row"><input id="v14RangeMiddle" type="checkbox"><span>真正 Range middle（Candidate = 0）</span></label><label class="toggle-row"><input id="v14ControlNegated" type="checkbox"><span>Retest 已否定 control（Candidate = 0）</span></label><label class="toggle-row"><input id="v14OppositeAcceptance" type="checkbox"><span>Strong opposite acceptance（禁止 Runner）</span></label><label>Opening Context｜只作 Shadow 分組<select id="v14OpeningContext"><option value="">未記錄</option><option value="Inside-Mid">Inside-Mid</option><option value="Inside-Edge">Inside-Edge</option><option value="Outside-Hold">Outside-Hold</option><option value="Outside-Fail">Outside-Fail</option></select></label></div></article>
+        <article id="rbDecisionResult" class="card result-card rulebook-anchor">
+          <h2>All-Market Master Trade Matrix｜完整判斷</h2>
+
           <div class="result-lines">
+            <div><span>市場</span><strong id="resultMarket"></strong></div>
+            <div><span>核心Setup</span><strong id="resultSetupTemplate"></strong></div>
             <div><span>大局背景</span><strong id="resultBackground"></strong></div>
             <div><span>主判斷</span><strong id="resultMain"></strong></div>
             <div><span>次判斷</span><strong id="resultSecondary"></strong></div>
-            <div><span>入場觸發</span><strong id="resultEntry"></strong></div>
-            <div><span>核心市場關係</span><strong id="resultRelation"></strong></div>
-            <div><span>市場上限</span><strong id="resultMarketCap"></strong></div>
-            <div><span>矩陣許可</span><strong id="resultMatrixSize"></strong></div>
-            <div><span>背景限制後</span><strong id="resultAdjustedSize"></strong></div>
+            <div><span>入場觸發層</span><strong id="resultEntryTimeframe"></strong></div>
+            <div><span>主次關係</span><strong id="resultRelation"></strong></div>
+            <div><span>Transition Type</span><strong id="resultTransitionType"></strong></div>
+            <div><span>Control Alignment</span><strong id="resultControlAlignment"></strong></div>
+            <div><span>交易優先方向</span><strong id="resultPreferredDirection"></strong></div>
+            <div><span>交易路線</span><strong id="resultMarketRoute"></strong></div>
+            <div><span>Setup Type</span><strong id="resultSetupType"></strong></div>
+            <div><span>Raw P</span><strong id="resultBasePosition"></strong></div>
+            <div><span>P3 Context｜Shadow</span><strong id="resultP3Context"></strong></div>
+            <div><span>Enhancement E</span><strong id="resultEnhancement"></strong></div>
+            <div><span>Execution P</span><strong id="resultEffectivePosition"></strong></div>
+            <div><span>P1順風</span><strong id="resultP1Background"></strong></div>
+            <div><span>Native Q</span><strong id="resultEffectiveTrigger"></strong></div>
+            <div><span>Q2 Subtype</span><strong id="resultQ2Subtype"></strong></div>
+            <div><span>Type A／Session 2B</span><strong id="resultAsia2B"></strong></div>
+            <div><span>市場關係上限</span><strong id="resultMarketCap"></strong></div>
+            <div><span>P×Q／方向Matrix</span><strong id="resultMatrixSize"></strong></div>
+            <div><span>Range修正</span><strong id="resultRangeSize"></strong></div>
+            <div><span>大局障礙修正</span><strong id="resultObstacleSize"></strong></div>
+            <div><span>Objective at Entry</span><strong id="resultTradeObjective"></strong></div>
+            <div id="resultPrimaryCapReasonRow" class="hidden"><span>0.25 Primary Cap Reason</span><strong id="resultPrimaryCapReason"></strong></div>
+            <div id="resultAdditionalCapFlagsRow" class="hidden"><span>Additional Cap Flags</span><strong id="resultAdditionalCapFlags"></strong></div>
+            <div><span>舊研究 Shadow（非 V1.4）</span><strong id="resultShadowSize"></strong></div>
           </div>
-          <div class="final-size"><span>最終注碼</span><strong id="finalSize"></strong></div>
+
+          <div class="final-size">
+            <span>V1.3 Production Final Size</span>
+            <strong id="finalSize">0注｜不做</strong>
+          </div>
+
           <div id="decisionExplanations"></div>
         </article>
 
-        <article class="card">
-          <h2>交易備註</h2>
-          <label>備註<textarea id="note" rows="5" placeholder="失效點、入場位置、管理計劃、第一目標"></textarea></label>
-          <button type="submit" class="primary-button">儲存 V3.4 決策</button>
+        <article class="card candidate-card" id="v14Card"><h2>V1.3 Production × V1.4 Candidate</h2>
+<p>Production 控制 Final Size / Valid Candidate；Candidate 只作同一時點研究。</p>
+<div class="dual-track-grid"><div class="production-track"><span>V1.3 Production Size</span><strong id="v13Size"></strong><span id="v13Valid"></span><span id="v13Objective"></span></div><div class="candidate-track"><span>V1.4 Candidate Size</span><strong id="v14Size"></strong><span id="v14Valid"></span><span id="v14Objective"></span><span id="v14Runner"></span></div></div>
+<p id="v14Reason" class="state-note"></p><p id="v14Only" class="state-note"></p>
+<details><summary>Candidate 規則判法</summary><p>Mixed 順 Main P1/P2/P2-E Q3 最高0.5；逆 Main 0。Dual Healthy P3→P2-E：Q3 cap 0.5、Q2 0.5。Conflict 一律 cap 0.25；Hard Healthy Conflict 0。Aligned Transition cap 0.25、Q2 0。原文 0/0.25 分支須確認 meaningful boundary；Mixed/Conflict Q2 另須冇 Negative。Counter Weak 只限原生P1/P2、active HTF及Route A/B；Counter Healthy只限active HTF原生P1。</p><p>Medium 禁止升注；High 降一級。MID+Structured 禁止升注及 Runner。Opening Context 只作標記。以上係 Candidate r1 固定判法，待2026 H1驗證。</p></details>
+<h3>入場快照</h3><div class="yes-no-grid"><label>Shadow Entry<input id="v14Entry" type="number" step="any"></label><label>Shadow SL<input id="v14SL" type="number" step="any"></label><label>Replay 入場時刻<input id="v14EntryTime" type="datetime-local"></label></div>
+<button id="freezeDualTrack" type="button" class="secondary-button">凍結兩套入場決策</button><button id="clearDualTrack" type="button" class="secondary-button">重設未儲存快照</button><p id="v14FreezeStatus" class="state-note">未凍結</p>
+<p class="state-note">Candidate 有效時，先填 Entry、SL、Replay 時刻並凍結，再繼續 replay。Entry 與 SL 同一時間點沿用原 Production 計劃。凍結後立即儲存紀錄，之後喺紀錄庫編輯 outcome。已存紀錄唔會重新計算入場 Size / Objective。已有結果先凍結會標示事後快照，另存但不入 Prospective A/B。</p>
+</article>
+        <article id="rbJournal" class="card journal-card rulebook-anchor">
+          <h2>練習／實戰結果紀錄</h2>
+
+          <label>
+            交易日期
+            <input id="tradeDate" type="date">
+          </label>
+
+          <div class="principle-box">
+            <strong>V1.3 Production Frozen｜V1.4 Prospective Shadow Challenger</strong>
+            <span>正式決策全程跟Frozen V1.3；Shadow只記錄，唔反過來改Valid Candidate、P/Q、Size、Objective、Entry或Management。</span>
+          </div>
+
+          <div id="euOpeningBacktestPanel" class="hidden" hidden aria-hidden="true">
+            <input id="openingStoryId" type="hidden" value="">
+            <div id="euDRequiredFields" class="hidden">
+              <select id="euAsiaSweepDirection"><option value="" selected></option></select>
+              <input id="euAsiaSweepTime" type="hidden" value="">
+              <select id="euPorSweepStage"><option value="" selected></option></select>
+              <select id="euOpeningDriveDirection"><option value="" selected></option></select>
+              <input id="euBrokeMicroStructure" type="checkbox" hidden>
+              <input id="euBrokeMainStructure" type="checkbox" hidden>
+              <input id="euNewStructureCycle" type="checkbox" hidden>
+              <input id="euOpeningRetestMinutes" type="hidden" value="">
+              <select id="euRetestDepth"><option value="" selected></option></select>
+              <select id="euRetestEfficiency"><option value="" selected></option></select>
+            </div>
+            <select id="obstacleOutcome"><option value="N/A" selected></option></select>
+          </div>
+
+          <label>
+            有冇入到市
+            <select id="entryStatus">
+              <option value="Entry">Entry｜有入市</option>
+              <option value="Miss">Miss｜有機會但冇入到</option>
+              <option value="Skip">Skip｜主動放棄</option>
+            </select>
+          </label>
+
+          <div class="yes-no-grid">
+            <label>
+              Entry-time Q
+              <select id="entryTimeQ">
+                <option value="Auto" selected>Auto｜跟入場當刻最終Q</option>
+                <option value="Q3">Q3</option>
+                <option value="Q2">Q2</option>
+                <option value="Q1">Q1</option>
+                <option value="N/A">N/A｜冇入到市</option>
+              </select>
+            </label>
+
+            <label>
+              Post-entry Q
+              <select id="postEntryQ">
+                <option value="N/A" selected>N/A｜未入場／未更新</option>
+                <option value="Q3">Q3｜維持完整</option>
+                <option value="Q2">Q2｜入場後降級但Thesis未Invalid</option>
+                <option value="Invalid">Invalid｜Thesis正式失效</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            Post-entry處理
+            <select id="postEntryAction">
+              <option value="N/A" selected>N/A｜未入場／未更新</option>
+              <option value="Hold">Hold｜深但仍弱，結構未失效</option>
+              <option value="Reduce">Reduce｜深＋強，返BE／入場區考慮減半</option>
+              <option value="Exit">Exit｜Thesis Invalid，即時全走</option>
+              <option value="SecondConfirmation">Second Confirmation｜放棄第一次掛盤，等P1／P2再打一個右側</option>
+            </select>
+          </label>
+
+          <p class="state-note">
+            Limit Entry只按入場當刻資料定Entry-time Q。之後新Price Action可以令Post-entry Q下降；Thesis正式Invalid時即時全走，唔等BE。
+          </p>
+
+          <label>
+            TP計劃
+            <select id="tpPlan">
+              <option value="2R全平">固定2R全平｜標準模式</option>
+              <option value="1.5R障礙推RF後博2R">RF-managed｜到1.5R–2R障礙推RF後博2R</option>
+              <option value="1R–1.5R部分食糊＋RF">部分食糊｜30%–50%障礙前食糊＋餘倉RF</option>
+              <option value="70%於2R＋30%試3R">70%於2R＋30%試3R</option>
+              <option value="50%於2R＋50%Runner">50%於2R＋50% Runner</option>
+            </select>
+          </label>
+
+          <label>
+            V1.3 Actual R（已乘 Production Size）
+            <input id="profitR" type="number" step="0.01" inputmode="decimal" placeholder="例如 -1、0、1.5、3">
+          </label>
+
+          <div class="yes-no-grid">
+            <label>
+              去唔去到推RF位
+              <select id="reachedRF">
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+                <option value="N/A">N/A｜掛盤但冇成交／不適用</option>
+              </select>
+            </label>
+
+            <label>
+              去唔去到TP2｜自動 MFE R &gt; 3.9
+              <select id="reachedTP2" disabled aria-label="自動：MFE R > 3.9">
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+                <option value="N/A">N/A｜掛盤但冇成交／不適用</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="yes-no-grid">
+            <label>MFE R<input id="mfeR" type="number" step="0.01" inputmode="decimal" placeholder="例如 2.35"></label>
+            <label>MAE R<input id="maeR" type="number" step="0.01" inputmode="decimal" placeholder="例如 -0.65"></label>
+            <label>Time to RF（H/M）<input id="timeToRF" type="text" inputmode="text" autocomplete="off" placeholder="例如 11H45M；未到RF留空"></label>
+          </div>
+
+          <div class="yes-no-grid">
+            <label>
+              V1.3 Production Valid Candidate｜自動
+              <select id="validCandidate" disabled aria-label="自動：V1.3 Final Size > 0">
+                <option value="Yes">Yes｜符合V1.3候選定義</option>
+                <option value="No" selected>No</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="v14-outcome"><h3>V1.4 Shadow Outcome｜事後更新</h3><label>Shadow 有成交<select id="v14ShadowTrade"><option value="No">No｜未成交／未決定</option><option value="Yes">Yes｜按凍結 Entry / SL 成交</option></select></label><div class="yes-no-grid"><label>Shadow MFE R（每單位風險）<input id="v14MfeR" type="number" step="any"></label><label>Shadow MAE R（每單位風險）<input id="v14MaeR" type="number" step="any"></label><label>V1.3 管理假設 R（V1.4-only 用；未乘 Size）<input id="v14BaseUnitR" type="number" step="any"></label><label>V1.4 非 Runner 管理結果 R（未乘 Size）<input id="v14ManagementUnitR" type="number" step="any"></label></div><label>Shadow 持倉有冇到 2R<select id="v14Reached2R"><option value="No">No／未到</option><option value="Yes">Yes</option></select></label><label>2R 當刻 Gate 已判定<select id="v14GateRecorded"><option value="No">未判定</option><option value="Yes">已判定（四項全有先開 Runner）</option></select></label><div class="shadow-input-grid"><label class="toggle-row"><input id="v14GateBreak" type="checkbox"><span>Break</span></label><label class="toggle-row"><input id="v14GateAcceptance" type="checkbox"><span>Acceptance</span></label><label class="toggle-row"><input id="v14GateHold" type="checkbox"><span>Hold</span></label><label class="toggle-row"><input id="v14GateExtend" type="checkbox"><span>Extend</span></label></div><label class="toggle-row"><input id="v14MainTransitionConfirmed" type="checkbox"><span>Counter Weak 特例：到2R時 Main 已真正轉成今次交易方向的 Transition（其餘路線不適用）</span></label><label>20% Runner 實際退出 R（0 = BE；4 = TP；未完成留空）<input id="v14RunnerExitR" type="number" step="any"></label><p class="state-note">Conditional + 到 2R + 四項 Gate 成立：80%@2R + 20%×Runner exit。Gate 已判但未全成立：100%@2R。MFE 唔會代替成交先後或 Gate；非 Runner／未到2R請填管理結果。Actual R 沿用原 App：已乘 Production Size；以上 Shadow R 均未乘 Size。</p><div id="v14OutcomePreview" class="state-note"></div></div>
+          <div class="shadow-research-panel">
+            <div class="shadow-research-heading">
+              <strong>2025 H2 Shadow Research｜Pruned</strong>
+              <span>只保留目前information value最高嘅欄位；唔改Frozen Decision。</span>
+            </div>
+
+            <div class="summary-grid shadow-auto-grid">
+              <div id="shadowPrimaryCapReasonRow" class="hidden"><span>0.25 Primary Cap Reason</span><strong id="shadowPrimaryCapReason">N/A</strong></div>
+              <div id="shadowAdditionalCapFlagsRow" class="hidden"><span>Additional Cap Flags</span><strong id="shadowAdditionalCapFlags">N/A</strong></div>
+              <div><span>Objective at Entry</span><strong id="shadowObjectiveAtEntry">N/A</strong></div>
+              <div><span>Normalized R</span><strong id="shadowNormalizedR">N/A</strong><small>Actual R ÷ Final Size</small></div>
+            </div>
+
+            <div class="yes-no-grid">
+              <label>
+                Post-entry Objective Upgrade
+                <select id="postEntryObjectiveUpgrade">
+                  <option value="No" selected>No</option>
+                  <option value="Yes">Yes</option>
+                </select>
+              </label>
+
+              <label>
+                Retest Internal Structure
+                <select id="retestInternalStructure">
+                  <option value="" selected>未記錄</option>
+                  <option value="none">None / One-leg</option>
+                  <option value="structured">Yes / Structured</option>
+                </select>
+              </label>
+
+              <label>
+                Retest vs Reclaim Structure
+                <select id="retestVsReclaimStructure">
+                  <option value="na" selected>N/A｜Reclaim冇清晰micro structure</option>
+                  <option value="hold">Hold</option>
+                  <option value="sweepReclaim">Sweep-Reclaim</option>
+                  <option value="breakAccept">Break-Accept</option>
+                </select>
+              </label>
+
+              <label>
+                Retest Acceptance
+                <select id="retestAcceptance">
+                  <option value="" selected>未記錄</option>
+                  <option value="hold">Hold</option>
+                  <option value="closeThrough">Close Through</option>
+                </select>
+              </label>
+
+              <label>
+                Deep-RF Triggered？
+                <select id="deepRFTriggered">
+                  <option value="No" selected>No</option>
+                  <option value="Yes">Yes</option>
+                </select>
+              </label>
+            </div>
+
+            <div id="deepRFDetails" class="conditional-panel hidden">
+              <div class="yes-no-grid">
+                <label>
+                  RF後原SL有冇被打？
+                  <select id="deepRFOriginalSLHit">
+                    <option value="N/A" selected>N/A</option>
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                  </select>
+                </label>
+                <label>
+                  RF後 Shadow MFE R
+                  <input id="deepRFShadowMfeR" type="number" step="0.01" inputmode="decimal" placeholder="例如 2.40">
+                </label>
+                <label>
+                  如果冇RF｜最終結果 R
+                  <input id="deepRFNoRfFinalR" type="number" step="0.01" inputmode="decimal" placeholder="例如 -1、0、2.5">
+                </label>
+              </div>
+            </div>
+
+            <p class="state-note">
+              <strong>Retest Internal Structure：</strong>Entry TF入場前已見清晰對手micro structure先算Structured；Long要見LH → LL，Short鏡像HH → HL。
+              <br><strong>Retest vs Reclaim Structure：</strong>N/A已同時代表Reclaim冇清晰micro structure；有structure先揀Hold／Sweep-Reclaim／Break-Accept。
+              <br><strong>Retest Acceptance：</strong>Hold／Close Through量較大reclaimed setup level有冇失守。
+              <br><strong>已停手動記錄：</strong>Reclaim / Retest Strong Bar ATR Ratio、獨立Reclaim Internal Structure、Relative ATR Ratio。
+            </p>
+          </div>
+
+          <p class="state-note"><strong>Reviewed Session已移出逐Trade紀錄。</strong> 同一Session可以有多個Trade Candidate，逐單填會重複計數；Opportunity Rate要留待獨立Session Review層統計。</p>
+
+          <div class="paste-image-section">
+            <span class="field-label">圖片／Chart Screenshot</span>
+            <div
+              id="chartPasteZone"
+              class="paste-zone"
+              contenteditable="true"
+              role="textbox"
+              tabindex="0"
+              spellcheck="false"
+              aria-label="貼上Chart Screenshot"
+            >點擊呢個區域後貼上圖片｜Mac：⌘V／Ctrl+V｜iPhone：長按後選「貼上」</div>
+            <button id="pasteClipboardImage" type="button" class="secondary-button paste-button">從剪貼簿貼上圖片</button>
+          </div>
+
+          <div id="imagePreviewContainer" class="image-preview hidden">
+            <div class="image-gallery-header">
+              <strong id="pendingImageCount">已貼上 0 張圖片</strong>
+              <button id="removePendingImage" type="button" class="secondary-button">移除全部圖片</button>
+            </div>
+            <div id="imagePreviewGallery" class="multi-image-gallery"></div>
+          </div>
+
+          <p class="state-note">
+            可以連續貼上多張圖片；每次貼上會新增圖片而唔會覆蓋之前嗰張。圖片會自動縮細後儲存在呢部裝置。CSV只會記錄圖片數量，唔會將圖片放入CSV。
+          </p>
+
+          <label>
+            事前理由／覆盤備註
+            <textarea id="note" rows="6" placeholder="事前劇本、失效點、Entry/Miss/Skip原因、入市後Price Pattern、管理、錯誤、下一次改進"></textarea>
+          </label>
+
+          <button type="submit" class="primary-button">儲存練習／實戰紀錄</button>
         </article>
       </form>
     </section>
 
     <section id="history" class="tab-panel">
       <article class="card">
-        <div class="section-heading"><h2>紀錄與統計</h2><button id="exportCsv" class="secondary-button">匯出 CSV</button></div>
-        <div class="summary-grid four">
+        <div class="section-heading">
+          <h2>紀錄庫與統計</h2>
+          <div class="export-actions">
+            <button id="exportCsv" class="secondary-button">匯出CSV</button>
+            <button id="exportBackupZip" class="secondary-button">匯出CSV＋照片 ZIP</button>
+          <p class="state-note"><strong>ZIP Round-trip：</strong>可以先匯出ZIP，打開入面嘅 <code>trades.csv</code> 修改，再用Windows／macOS重新壓成一般ZIP後匯入。App會以紀錄ID比對 <code>records.json</code>，只將CSV有改動嘅同ID紀錄更新；未改嘅重複紀錄會Skip。唔好手動修改「紀錄ID」。</p>
+            <button id="importCsvButton" class="secondary-button" type="button">匯入CSV</button>
+            <button id="importBackupZipButton" class="secondary-button" type="button">匯入／更新備份ZIP</button>
+            <input id="importCsvFile" class="visually-hidden" type="file" accept=".csv,text/csv">
+            <input id="importBackupZipFile" class="visually-hidden" type="file" accept=".zip,application/zip">
+          </div>
+        </div>
+
+        <p class="state-note import-note">
+          匯入CSV會還原文字紀錄；匯入本App產生嘅「CSV＋照片 ZIP」會連照片一齊還原。相同紀錄ID會自動跳過，避免重複。舊CSV冇紀錄ID時會建立新ID。
+        </p>
+
+        <div class="summary-grid stats-grid">
           <div><span>總紀錄</span><strong id="statCount">0</strong></div>
-          <div><span>平均建議注碼</span><strong id="statAverageSize">0.00</strong></div>
-          <div><span>已填結果平均 R</span><strong id="statAverageR">未有資料</strong></div>
-          <div><span>已填結果勝率</span><strong id="statWinRate">未有資料</strong></div>
+          <div><span>Entry</span><strong id="statEntry">0</strong></div>
+          <div><span>Miss</span><strong id="statMiss">0</strong></div>
+          <div><span>Skip</span><strong id="statSkip">0</strong></div>
+          <div><span>Production 平均獲利R</span><strong id="statAverageR">未有資料</strong></div>
+          <div><span>勝率</span><strong id="statWinRate">未有資料</strong><small>只計Entry且R ≠ 0；R &gt; 0＝Win</small></div>
+          <div><span>到RF比率</span><strong id="statRFRate">未有資料</strong></div>
+          <div><span>到TP2比率</span><strong id="statTP2Rate">未有資料</strong></div>
+          <div><span>實戰紀錄</span><strong id="statLive">0</strong></div>
+          <div><span>Valid Candidate</span><strong id="statValidCandidates">0</strong><small>Trade-level候選數；Opportunity Rate留待Session Review層計</small></div>
         </div>
       </article>
+
+      <article class="card candidate-card"><h2>雙軌 A/B｜目前篩選的 Production trades</h2><p class="state-note">只比較有完整兩套 outcome 嘅入場前凍結紀錄；V1.4-only 另列。R 已乘各自 Size。歷史紀錄唔會事後補算成 Prospective。</p><div id="dualTrackStats"></div><button type="button" id="exportDualTrackAudit" class="secondary-button">匯出 A/B 研究 CSV（目前篩選）</button></article>
+      <article class="card filter-card">
+        <div class="filter-grid">
+          <label>
+            類型
+            <select id="historyModeFilter">
+              <option value="All">全部</option>
+              <option value="Practice">練習</option>
+              <option value="Live">實戰</option>
+            </select>
+          </label>
+
+          <label>
+            入市結果
+            <select id="historyEntryFilter">
+              <option value="All">全部</option>
+              <option value="Entry">Entry</option>
+              <option value="Miss">Miss</option>
+              <option value="Skip">Skip</option>
+            </select>
+          </label>
+
+          <label>
+            商品
+            <select id="historySymbolFilter">
+              <option value="All">全部商品</option>
+            </select>
+          </label>
+
+          <label>
+            日期由
+            <input id="historyDateFrom" type="date">
+          </label>
+
+          <label>
+            日期至
+            <input id="historyDateTo" type="date">
+          </label>
+
+          <label>
+            排序
+            <select id="historySort">
+              <option value="created-desc" selected>紀錄時間｜最新 → 最舊</option>
+              <option value="created-asc">紀錄時間｜最舊 → 最新</option>
+              <option value="trade-date-asc">入場／交易日期｜最早 → 最新</option>
+              <option value="trade-date-desc">入場／交易日期｜最新 → 最早</option>
+              <option value="sequence-asc">紀錄編號｜#1 → #N</option>
+              <option value="sequence-desc">紀錄編號｜#N → #1</option>
+              <option value="symbol-asc">商品｜A → Z</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="filter-actions">
+          <button id="historyClearFilters" class="secondary-button compact-button" type="button">
+            清除篩選
+          </button>
+          <span id="historyFilterSummary" class="state-note">顯示全部紀錄</span>
+        </div>
+
+        <div class="history-selection-entry">
+          <button id="historySelectModeToggle" class="secondary-button compact-button" type="button">
+            選取多個紀錄
+          </button>
+        </div>
+
+        <div id="historyBulkActions" class="history-bulk-actions hidden" aria-live="polite">
+          <strong id="historySelectedCount">已選 0 筆</strong>
+          <div class="history-bulk-buttons">
+            <button id="historySelectAllFiltered" class="secondary-button compact-button" type="button">
+              全選目前結果
+            </button>
+            <button id="historyClearSelection" class="secondary-button compact-button" type="button" disabled>
+              清除選取
+            </button>
+            <button id="historyDeleteSelected" class="danger-button compact-button" type="button" disabled>
+              刪除已選
+            </button>
+          </div>
+          <p class="state-note">選取模式下，點擊紀錄卡會勾選／取消；完成後按「刪除已選」。</p>
+        </div>
+      </article>
+
       <div id="historyList"></div>
     </section>
 
     <section id="rules" class="tab-panel">
-      <article class="card"><h2>自動時間框架配置</h2>
-        <div class="rule-grid">
-          <div><strong>入場 1M／3M</strong><span>次判 15M｜主判 1H｜大局 4H</span></div>
-          <div><strong>入場 5M／15M</strong><span>次判 1H｜主判 4H｜大局 D</span></div>
-          <div><strong>入場 1H</strong><span>次判 4H｜主判 D｜大局 W</span></div>
+      <article class="card">
+        <p class="eyebrow">EU OPENING速查</p>
+        <h2>UK100／GER40</h2>
+        <p><strong>EU-A</strong> POR H/L 2B｜<strong>EU-B</strong> Asia Sweep＋Post-open Confirmation｜<strong>EU-D</strong> POR Full Repair。</p>
+        <p class="muted">Asia Sweep＋POR Repair只係同一Order-flow thesis多個Tag；唔Double E／Size。開市前Asia 2B仍然唔入場。</p>
+      </article>
+
+      <article class="card">
+        <p class="eyebrow">MASTER TRADE MATRIX V1.3｜2026/08 FROZEN</p>
+        <h2>HSI／UK100／GER40／外匯／黃金整合版</h2>
+        <p class="large-rule">大局 → 主／次Market State → Direction Permission → Control Alignment → Raw P → Setup／E → Native Q → Obstacle／RR → Final Size → Expansion／Reaction／Skip</p>
+        <p>Native Q3同Q2永久分開；E只係Instrument／Session Edge，可令Raw P3取得P2-effective，但唔會洗白Q2、唔會P2→P1、亦唔會創造方向權限。</p>
+      </article>
+
+      <article class="card">
+        <h2>市場時間框架</h2>
+        <div class="matrix-table-wrap">
+          <table class="matrix-table">
+            <thead><tr><th>市場</th><th>大局</th><th>主判</th><th>次判</th><th>Trigger</th></tr></thead>
+            <tbody>
+              <tr><td>FX／XAU常用</td><td>Daily</td><td>4H</td><td>1H</td><td>15M／5M；1M只精細Entry</td></tr>
+              <tr><td>HSI／UK／GER｜1M/5M入</td><td>4H</td><td>1H</td><td>15M</td><td>1M／5M</td></tr>
+              <tr><td>HSI／UK／GER｜15M入</td><td>Daily</td><td>4H</td><td>1H</td><td>15M</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>功能層級係相對入場TF，唔係固定「某個TF＝P2」。大局只可限制方向、目標、注碼或否決空間不足；唔可以單獨提高注碼。</p>
+      </article>
+
+      <article class="card">
+        <h2>Market State硬規則</h2>
+        <p class="large-rule">未有實收有效突破主結，一律仍當弱勢；主結被破只代表舊趨勢失效，未有新LH＋LL或HL＋HH前唔可以直接判新健康趨勢。</p>
+        <ul>
+          <li>健康升／跌：清晰HH＋HL或LH＋LL，主結完整，推進有Follow-through。</li>
+          <li>弱升／跌：主結未破，但回調變深、次結可能失守、推進質素下降。</li>
+          <li>轉換：舊趨勢主結已有效失守，但新方向未完成Trend確認；偏向只影響優先方向。</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>Transition Type V1.3</h2>
+        <ul>
+          <li><strong>Aligned：</strong>兩層Transition同一偏向；視作Early Trend候選。P2＋Native Q3正式0.25，0.5只做Shadow Test。</li>
+          <li><strong>Mixed：</strong>兩層Transition偏向相反；屬Conflict環境。</li>
+          <li><strong>Neutral：</strong>至少一層轉換中性／大型Range；只做邊界，真正Range中間0。</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>Control Alignment｜研究欄位</h2>
+        <p><strong>Confirmed：</strong>次判已建立Trade方向Trend。<br><strong>Transitioning：</strong>次判舊方向失效，正在向Trade方向轉。<br><strong>Opposing：</strong>次判仍然係Trade反方向Trend。</p>
+        <p class="muted">V1.3暫時只記錄，唔直接改Size；研究假設 Confirmed ＞ Transitioning ＞ Opposing。</p>
+      </article>
+
+      <article class="card">
+        <h2>Native Q／Q2 Subtype</h2>
+        <p>Q2-R＝Reclaim普通；Q2-F＝Fast Retest；Q2-D＝Deep Retest；Q2-S＝Strong Retest；Q2-RR＝第一障礙約1.5R–&lt;2R。Subtype可以組合；Fast＋Deep＋Strong通常直接Q1。</p>
+        <p class="large-rule">V1.3取消所有E／Session Q2→Q3升級。</p>
+      </article>
+
+      <article class="card">
+        <h2>Objective at Entry</h2>
+        <p><strong>Expansion：</strong>Entry一刻已具成熟方向Alignment、Native Q3、P1／P2／P2-E同Clean ≥2R。<br><strong>Reaction-first：</strong>方向／位置／Q3／Space合格，但control成熟度未足以直接叫Expansion；即舊版Not sure＋Reaction-first Shadow合併後嘅單一分類。<br><strong>Reaction：</strong>Counter-main、Q2、Conflict、Mixed／Neutral context、空間／control不足，或者舊版Not sure但唔屬Reaction-first eligible。Final Size 0則Objective at Entry記N/A。</p>
+      </article>
+
+      <article class="card">
+        <h2>主結／次結</h2>
+        <p><strong>主結：</strong>有效突破＋Acceptance＋延續會令原趨勢失效。候選回調通常要約50%深度、或約10支K以上清晰橫行兼兩頂兩底，之後再突破回調前高／低確認HL／LH。</p>
+        <p><strong>次結：</strong>重要局部工作結構；失守令Trend變得不健康，但單獨唔足以否定整個趨勢。</p>
+      </article>
+
+      <article class="card">
+        <h2>方向權限／市場關係</h2>
+        <ul>
+          <li><strong>雙健康同向：</strong>最高1注。</li>
+          <li><strong>同向但含弱勢／轉換：</strong>最高0.5注。</li>
+          <li><strong>衝突但順主判：</strong>P1／P2＋右側確認，最高0.5注。</li>
+          <li><strong>逆主判拆開處理：</strong>主判弱＝只認Route A/B＋Native Q3；主判健康＝只認Active HTF P1第一反應＋Native Q3。兩者最高都係0.25，任何Q2＝0。</li>
+          <li><strong>P1順風路徑：</strong>健康／弱主判按原規則；主判Transition只限中性，或交易方向順主判偏向。仍有效P1順風＋P2／P2-E＋Q3＝最高0.25。</li>
+          <li><strong>Transition反例：</strong>轉換偏升做Short、轉換偏跌做Long，都唔可以借P1順風取得P2權限。</li>
+          <li><strong>K｜逆弱主判 Route A：</strong>主判次結／工作結構Break＋Acceptance＋第一次Retest＋P1/P2/P2-E＋Native Q3 → 0.25。</li>
+          <li><strong>K｜逆弱主判 Route B：</strong>健康逆向次判＋P1/P2/P2-E＋Native Q3＋全新獨立Session Confirmation → 0.25。</li>
+          <li><strong>K鎖死：</strong>冇Route A/B＝0；P1都唔例外。P1順風只作背景記錄，唔係第三條Permission。</li>
+          <li><strong>L｜逆健康主判：</strong>正常0；Active HTF P1第一反應＋P1/P2/P2-E＋Native Q3右側反轉先0.25。</li>
+          <li><strong>雙轉換／Range：</strong>只做邊界；Range中間固定0。</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>V1.28.4｜Journal Session Metric Cleanup</h2>
+        <ul>
+          <li><strong>Reviewed Session：</strong>由逐Trade Journal移走；同一Session多單Trade唔再重複計分母。</li>
+          <li><strong>Valid Candidate：</strong>保留做Trade-level研究欄位。</li>
+          <li><strong>Opportunity Rate：</strong>唔再由Trade紀錄計算；統計卡改為Valid Candidate數量，真正Opportunity Rate留待獨立Session Review層。</li>
+          <li><strong>舊資料：</strong>舊CSV／舊紀錄內Reviewed Session仍可讀，CSV欄位保留相容。</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>V1.28.3｜C / E / J / M Route修正</h2>
+        <ul>
+          <li><strong>C：</strong>一層Directional Transition＋另一層Confirmed同方向：P1/P2 Q3＝0.5、Q2＝0.25；P2-E＋Q2全局最多0.25。</li>
+          <li><strong>E：</strong>主判中性Transition＋次判Confirmed，順次判：唔再歸Neutral Transition；Size同C，但Objective固定Reaction。</li>
+          <li><strong>J：</strong>主判Directional Transition＋次判Confirmed反方向：做任何一邊Size暫時一樣；P1 Q3＝0.5、Q2＝0.25；P2 Q3＝0.25、Q2＝0；P3＝0。Control Alignment分研究Tag。</li>
+          <li><strong>M：</strong>主判中性Transition但逆次判Confirmed：正常0；清晰HTF P1／主要Range Boundary＋Native Q3先0.25 Reaction Probe。</li>
+          <li><strong>F：</strong>Neutral／Range Transition保留原規則，而且永遠排除Expansion。</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>窄義HTF P1反轉例外</h2>
+        <p>原本方向權限為0時，只有Daily／Weekly清晰P1、原生至少P2、Q3右側反轉、對應Setup模型嘅等價確認、第一段反應仍新鮮、空間足夠，先可最高0.25 Probe。</p>
+        <p>Type A P3→P2-effective唔會創造呢個方向權限。</p>
+      </article>
+
+      <article class="card">
+        <h2>Range 25%</h2>
+        <ul>
+          <li>次判中性轉換／Range：Long只考慮底25%；Short只考慮頂25%。</li>
+          <li>未進入相關25%：注碼降一級，1 → 0.5 → 0.25 → 0。</li>
+          <li>Range中間固定0；內部工作線突破唔代表整個Range失效。</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>P位置</h2>
+        <ul>
+          <li><strong>P1：</strong>W／D主要支持阻力、大局／主判主結、大型Range頂底、改變主判狀態嘅突破回測、次判主結與HTF主要結構重疊。</li>
+          <li><strong>P2：</strong>次判主結、主判次結、重要Range邊界、Breakout＋Acceptance＋第一次Retest、Swap、Impulse Origin、主要結構＋Session Liquidity。</li>
+          <li><strong>P3：</strong>次判次結、Trigger主結、Session H/L＋普通結構、0.618＋普通Swap、低TF Range邊界、指定POR／OPR／Asia工作線。</li>
+          <li><strong>P4：</strong>Range中間、純Fib、冇Setup優勢嘅純Session線、追價、障礙極近、冇真實結構。</li>
+        </ul>
+        <p class="large-rule">隱藏Fib後，裸圖仍然會唔會畫出呢個位置？</p>
+      </article>
+
+      <article class="card">
+        <h2>Setup Type</h2>
+        <h3>Type A｜高質Session 2B</h3>
+        <p>只包括HSI OPR 2B、FX Asia／OPR 2B、UK100／GER40正式開市後POR 2B。高質Setup可令Raw P3獲P2-effective；<strong>Native Q永久保留，V1.3取消Q2→Q3。</strong></p>
+        <h3>Type B｜普通Sweep＋Reclaim</h3>
+        <p>一般市場PDH／PDL、Mon H/L、普通Swing及非指定Session Sweep冇自動P／Q升級。XAU只按PWH／PWL、PDH／PDL E+及Asia H/L E作位置Enhancement；Native Q唔升級。</p>
+        <h3>Type C｜Breakout／No Sweep</h3>
+        <p>EU-D POR Full Repair嘅Breakout＋Acceptance＋第一次Retest係原生P2；EU-B Asia Sweep＋Post-open Confirmation普通P3可取得P2-effective，而真實15M／1H Breakout／Swap維持原生P2或P1。No-Sweep反轉只限真正P1。</p>
+      </article>
+
+      <article class="card">
+        <h2>Q質素</h2>
+        <ul>
+          <li><strong>Q3：</strong>有效Sweep或Breakout、有效Reclaim／Acceptance、微結構或控制權轉移、Retest明顯較弱、第一障礙前空間足夠。</li>
+          <li><strong>Q2：</strong>故事仍成立，但Retest稍快／深、Reclaim一般、Follow-through普通、Acceptance只屬合格或空間略受壓。</li>
+          <li><strong>Q1：</strong>核心失效、Reclaim被吞、Retest快深強、重新Acceptance返原Range、第一障礙前冇最低R:R或追價。</li>
+        </ul>
+        <p class="large-rule">價格推進效率 → 深度 → K線及Sequence力度 → 所需時間 → Volume</p>
+      </article>
+
+      <article class="card">
+        <h2>基本Matrix</h2>
+        <div class="matrix-table-wrap">
+          <table class="matrix-table">
+            <thead><tr><th>市場關係</th><th>P1 Q3</th><th>P1 Q2</th><th>P2 Q3</th><th>P2 Q2</th><th>P3 Q3</th></tr></thead>
+            <tbody>
+              <tr><td>健康雙同向</td><td>1</td><td>0.5</td><td>1</td><td>0.5</td><td>0.5</td></tr>
+              <tr><td>同向但有弱勢</td><td>0.5</td><td>0.25</td><td>0.5</td><td>0.25</td><td>0.25／0</td></tr>
+              <tr><td>Aligned Transition</td><td>0.5</td><td>0.25</td><td><strong>0.25</strong></td><td>0</td><td>0.25／0</td></tr>
+              <tr><td>Mixed／Neutral Transition</td><td>0.5</td><td>0.25</td><td>0.25</td><td>0</td><td>0.25／0</td></tr>
+              <tr><td>衝突順主判</td><td>0.5</td><td>0.25</td><td>0.5</td><td>0.25</td><td>0.25／0</td></tr>
+              <tr><td>逆主判</td><td>視路線</td><td>0</td><td>Route A/B等0.25</td><td>0｜Research</td><td>0</td></tr>
+            </tbody>
+          </table>
         </div>
       </article>
-      <article class="card"><h2>核心流程</h2><p class="large-rule">大局背景 → 主判斷 × 次判斷 → 位置級別 → 入場 Trigger → 最終注碼</p></article>
-      <article class="card"><h2>一注唯一條件</h2><p class="large-rule">主判斷健康趨勢＋次判斷健康同向＋P1／P2＋Q3。</p><p class="muted">大局背景同向亦唔可以自行加注。</p></article>
-      <article class="card"><h2>大局背景規則</h2><ul><li>順背景：只作支持，不加注。</li><li>逆健康背景＋已到大局支持／阻力位：最高封頂 0.5 注。</li><li>逆健康背景但未到大局支持／阻力位：不影響原本矩陣注碼。</li><li>逆弱勢背景：不自動調整注碼。</li><li>背景轉換：不提供加注理由。</li></ul></article>
-      <article class="card"><h2>資料</h2><p>紀錄只儲存在呢部裝置嘅瀏覽器。定期匯出 CSV；清除 Safari 網站資料會刪除紀錄。</p></article>
+
+      <article class="card">
+        <h2>HSI Matrix</h2>
+        <ul>
+          <li><strong>HSI-A：</strong>OPR H/L 2B｜高質P3可P2-E。</li>
+          <li><strong>HSI-B：</strong>普通結構Sweep｜無自動升級。</li>
+          <li><strong>HSI-C｜OPR Continuation & Retest：</strong>Research／Provisional；主判＋次判必須雙同向，Trade方向順主／次判；09:15–09:30 OPR完成，09:30後Full Reclaim OPR H/L＋Acceptance／Follow-through＋First Retest。<strong>OPR Direction Context</strong>只分「順向順勢」／「反向順勢」；兩者都唔係逆勢Trade。暫時冇E，Raw P3仍P3。</li>
+          <li><strong>順向順勢：</strong>OPR方向＝主判／次判方向＝Trade方向；例如HTF ↑＋OPR ↑＋Trade ↑。</li>
+          <li><strong>反向順勢：</strong>OPR方向逆主判／次判，但Trade仍順主／次判；例如HTF ↑＋OPR ↓＋Trade ↑。「反向」只指OPR逆HTF。</li>
+          <li><strong>時間：</strong>10:30後唔開新Setup。</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>UK100／GER40 EU POR Matrix</h2>
+        <p>UTC+8圖表：夏令POR 14:00–15:00；冬令15:00–16:00。正式現貨開市後先執行。</p>
+        <ul>
+          <li><strong>EU-A：</strong>開市後POR H/L 2B｜高質P3可P2-E。</li>
+                    <li><strong>EU-B：</strong>Asia Sweep＋Post-open Confirmation｜普通P3可P2-effective；實際Breakout／Swap維持原生P2／P1。</li>
+          <li><strong>EU-D：</strong>POR Full Repair｜Breakout＋Acceptance＋First Retest形成原生P2。</li>
+          <li><strong>禁止重複計分：</strong>同一Opening Story只有一個Order-flow thesis；Asia Sweep、Full Repair、Opening Drive唔Double E／Size。</li>
+          <li>只有Asia Sweep而冇正式開市後確認＝唔入場；價格喺POR內重新Acceptance，Full Repair失效。</li>
+        </ul>
+        <p><strong>P來源只能揀一種：</strong>EU-B可原生P1／P2或P3→P2-effective；EU-D Full Repair按原生P2／實際P1處理。</p>
+      </article>
+
+      <article class="card">
+        <h2>外匯 Matrix</h2>
+        <ul>
+          <li><strong>FX-A：</strong>Asia／OPR 2B｜高質P3可P2-effective。</li>
+          <li><strong>FX-B：</strong>普通Liquidity Sweep｜P由真實結構決定，冇自動升級。</li>
+          <li><strong>FX-C：</strong>Breakout＋Acceptance＋First Retest｜原生P2；改變4H狀態可P1。</li>
+          <li><strong>FX-D：</strong>只限Daily／4H P1、主判弱化、次判Sweep＋Reclaim＋右側反轉、第一段反應新鮮。</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>FX Previous H/L Sweep｜V1.28.1</h2>
+        <ul>
+          <li><strong>FX-B｜Sweep PDH／PDL 或 PWH／PWL：</strong>獨立記錄Liquidity來源同Sweep Session。</li>
+          <li><strong>Liquidity：</strong>PDH／PDL或PWH／PWL。</li>
+          <li><strong>Session：</strong>Asia或Europe／London。</li>
+          <li><strong>Execution：</strong>仍然按Raw P＋Native Q＋Direction Permission；V1.28.1暫時冇自動E／P3→P2-effective。</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>XAUUSD專用 Matrix｜2026/08</h2>
+        <p><strong>時間框架：</strong>Daily大局／4H主判／1H次判／15M或5M Trigger；1M只改善Entry，唔重新判方向。</p>
+        <p class="large-rule">HTF Location Sweep ≥ PWH／PWL＋HTF ≈ PDH／PDL＋HTF ＞ 純PWH／PWL ≈ 純PDH／PDL ＞ Asia H/L＋Structure ＞ 純Asia H/L</p>
+        <ul>
+          <li><strong>XAU-A｜HTF Location Sweep：</strong>P1／P2，或者有清晰結構語義嘅P3（例如次判次結／working structure）＋meaningful liquidity sweep＋Reclaim＋Retest。P3可以直接按原本P3 × Native Q Matrix交易；唔需要靠Sweep或E先「救」成P2。P4仍然0注。XAU首選。</li>
+          <li><strong>XAU-B｜Sweep PDH／PDL 或 PWH／PWL：</strong>可記Asia或Europe／London Sweep。先揀Previous Day／Week H/L，再按Sweep＋Reclaim＋弱Retest評Native Q；PWH／PWL同PDH／PDL高質Sweep都係E+，Raw P3可按原規則獲P2-effective。</li>
+          <li><strong>XAU-C｜London Sweep Asia H／L：</strong>保留做Secondary；最好有HTF位置、PDH／PDL、Mon H／L、1H結構或Range邊界支持。</li>
+          <li><strong>Liquidity Enhancement：</strong>PWH／PWL＝E+；PDH／PDL＝E+；Asia H/L＝E。高質Sweep可令Raw P3→P2-effective；<strong>Native Q永久保留，唔可以Q2→Q3。</strong> E亦唔可以P2→P1。</li>
+          <li><strong>XAU-A P3處理：</strong>Raw P3本身已有交易資格，直接跟市場關係Matrix計Size；有E／E+時先另外升Execution P2-effective。即係「P3可做」同「P3有E升P2-E」係兩回事。</li>
+          <li><strong>禁止修補：</strong>Retest fast/deep/strong、Reclaim被吞／失效、空間不足、已形成強反向microstructure，一律唔可以靠E／E+升Q。</li>
+          <li><strong>Q：</strong>沿用Q3／Q2／Q1；Retest優先睇價格推進效率、深度、K線Sequence、時間，Volume只係輔助。</li>
+          <li><strong>空間：</strong>≥2R正常／Expansion候選；1.5R–&lt;2R仍可做但預設Reaction＋RF／Partial；&lt;1.5R通常RR Veto。</li>
+          <li>黃金高速Retest、延伸段追價、固定點數SL都唔合格。</li>
+        </ul>
+        <p><strong>核心優先：</strong>HTF Location Sweep ≥ PWH／PWL＋HTF Structure ≈ PDH／PDL＋HTF Structure ＞ 純PWH／PWL ≈ 純PDH／PDL ＞ Asia H/L＋Structure ＞ 純Asia H/L。</p>
+      </article>
+
+      <article class="card">
+        <h2>第一真實障礙／Hard Veto</h2>
+        <ul>
+          <li>第一障礙≥2R：正常Matrix；Expansion候選。</li>
+          <li>1.5R–&lt;2R：仍可交易，Size唔因距離自動降，但Objective通常Reaction；第一結構／障礙RF或Partial優先。</li>
+          <li>第一障礙&lt;約1.5R：通常RR Veto，0注。</li>
+          <li>已身處重大HTF障礙區：Size再降一級；如果突破障礙係Thesis必要條件就Skip。</li>
+        </ul>
+        <ol>
+          <li>P4／Range中間／追價</li>
+          <li>冇有效Sweep-Reclaim或Breakout Setup</li>
+          <li>Retest快、深、強到否定Setup</li>
+          <li>最低可接受RR不足（V1.3通常第一真實障礙&lt;約1.5R）</li>
+          <li>違反交易時間或總風險限制</li>
+        </ol>
+      </article>
+
+      <article class="card">
+        <h2>V1.3 Research Queue｜唔直接改正式Size</h2>
+        <ol>
+          <li>Aligned Transition P2 Q3：0.25 vs 0.5 Shadow。</li>
+          <li>Counter-main Q2 Reaction：正式0，研究0.25可能性。</li>
+          <li>Confirmed／Transitioning／Opposing Control Expectancy。</li>
+          <li>Q2-R／F／D／S／RR各自Expectancy。</li>
+          <li>P2-E＋Q2係咪要再收緊。</li>
+          <li>HSI OPR-C將來有冇E；XAU PWH/PWL vs PDH/PDL vs Asia；EU-D TP2表現。</li>
+        </ol>
+        <p class="large-rule">V1.3 Frozen：新sample用同一版記，唔因單一case即時改權限。</p>
+      </article>
+
+      <article class="card">
+        <h2>Limit／Post-entry／TP</h2>
+        <ul>
+          <li>Limit掛出後，落去入場位方式會重新改變Entry-time Q；位置愈深唔代表Trigger愈好。</li>
+          <li>Retest深但仍弱：Hold；深兼強但未Invalid：返Entry／BE附近減半；故事失效：即時Exit。</li>
+          <li>現階段統計優先固定2R全平。Runner只限健康同向、P1／P2、Q3、前方冇重大障礙及最高級Setup。</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>最終核心</h2>
+        <p class="large-rule">方向決定可唔可以做；P決定喺邊度做；Setup決定市場故事；Q決定Trigger是否合格；障礙決定值唔值得做；最低一層決定最終注碼。</p>
+      </article>
     </section>
   </main>
 
   <dialog id="recordDialog">
     <form method="dialog">
-      <div class="dialog-header"><h2 id="dialogTitle"></h2><button value="cancel" class="icon-button">×</button></div>
+      <div class="dialog-header">
+        <h2 id="dialogTitle">交易紀錄</h2>
+        <button value="cancel" class="icon-button" aria-label="關閉">×</button>
+      </div>
+
       <div id="recordDetails" class="record-details"></div>
-      <label>實際注碼<input id="editActualSize" type="number" step="0.25" min="0" max="1"></label>
-      <label>結果 R<input id="editResultR" type="number" step="0.01"></label>
-      <label>覆盤備註<textarea id="editNote" rows="5"></textarea></label>
-      <div class="dialog-actions"><button id="deleteRecord" type="button" class="danger-button">刪除</button><button value="cancel" class="secondary-button">取消</button><button id="saveRecordEdit" type="button" class="primary-button compact-button">儲存修改</button></div>
+
+      <div id="recordImageContainer" class="record-image hidden">
+        <div class="image-gallery-header">
+          <strong id="recordImageCount">0 張圖片</strong>
+          <div class="image-actions">
+            <button id="downloadRecordImage" type="button" class="secondary-button">下載全部圖片</button>
+            <button id="removeStoredImage" type="button" class="danger-button">移除全部圖片</button>
+          </div>
+        </div>
+        <div id="recordImageGallery" class="multi-image-gallery"></div>
+      </div>
+
+      <label>
+        交易日期
+        <input id="editTradeDate" type="date">
+      </label>
+
+      <label>
+        交易商品／品種
+        <input id="editSymbol" type="text" autocomplete="off" autocapitalize="characters" placeholder="例如 EURUSD、XAUUSD、GER40">
+      </label>
+      <p class="state-note">只修改呢筆歷史紀錄嘅商品名稱；唔會重新計算市場分類、Setup、P／Q、Size或Objective at Entry。</p>
+
+      <label>
+        類型
+        <select id="editRecordMode">
+          <option value="Practice">練習 Practice</option>
+          <option value="Live">實戰 Live</option>
+        </select>
+      </label>
+
+      <label>
+        有冇入到市
+        <select id="editEntryStatus">
+          <option value="Entry">Entry</option>
+          <option value="Miss">Miss</option>
+          <option value="Skip">Skip</option>
+        </select>
+      </label>
+
+      <label id="editHsiOprDirectionContextRow" class="hidden">
+        OPR Direction Context｜HSI-C
+        <select id="editHsiOprDirectionContext">
+          <option value="">未記錄</option>
+          <option value="alignedTrend">順向順勢</option>
+          <option value="reverseOprTrend">反向順勢</option>
+        </select>
+      </label>
+
+      <label id="editP3ContextRow" class="hidden">
+        Raw P3 Type｜P3 Context
+        <select id="editP3Context">
+          <option value="">未分類</option>
+          <option value="PB">P3-PB｜Pullback</option>
+          <option value="MID">P3-MID｜Neutral / Mid-location</option>
+          <option value="EXT">P3-EXT｜Extension</option>
+        </select>
+      </label>
+      <p id="editP3ContextNote" class="state-note hidden">事後標籤修正唔會改入場快照內嘅 P3 Context、Size 或 Objective。</p>
+
+      <div class="yes-no-grid">
+        <label>
+          Entry-time Q
+          <select id="editEntryTimeQ">
+            <option value="Auto">Auto｜跟入場當刻最終Q</option>
+            <option value="Q3">Q3</option>
+            <option value="Q2">Q2</option>
+            <option value="Q1">Q1</option>
+            <option value="N/A">N/A｜冇入到市</option>
+          </select>
+        </label>
+
+        <label>
+          Post-entry Q
+          <select id="editPostEntryQ">
+            <option value="N/A">N/A｜未入場／未更新</option>
+            <option value="Q3">Q3｜維持完整</option>
+            <option value="Q2">Q2｜降級但未Invalid</option>
+            <option value="Invalid">Invalid｜Thesis正式失效</option>
+          </select>
+        </label>
+      </div>
+
+      <label>
+        Post-entry處理
+        <select id="editPostEntryAction">
+          <option value="N/A">N/A｜未入場／未更新</option>
+          <option value="Hold">Hold</option>
+          <option value="Reduce">Reduce｜返BE／入場區考慮減半</option>
+          <option value="Exit">Exit｜Thesis Invalid即走</option>
+          <option value="SecondConfirmation">Second Confirmation｜等P1／P2再打一個右側</option>
+        </select>
+      </label>
+
+      <label>
+        TP計劃
+        <select id="editTpPlan">
+          <option value="2R全平">固定2R全平｜標準模式</option>
+          <option value="1.5R障礙推RF後博2R">RF-managed｜到1.5R–2R障礙推RF後博2R</option>
+          <option value="1R–1.5R部分食糊＋RF">部分食糊｜30%–50%障礙前食糊＋餘倉RF</option>
+          <option value="70%於2R＋30%試3R">70%於2R＋30%試3R</option>
+          <option value="50%於2R＋50%Runner">50%於2R＋50% Runner</option>
+          <option value="1:2食哂">舊版｜1:2食哂</option>
+          <option value="1:2食半留半">舊版｜1:2食半留半</option>
+        </select>
+      </label>
+
+      <section class="candidate-card"><h3>雙軌入場快照｜唯讀</h3><div id="editDualTrackSummary"></div><div class="v14-outcome"><h3>V1.4 Shadow Outcome｜事後更新</h3><label>Shadow 有成交<select id="editv14ShadowTrade"><option value="No">No｜未成交／未決定</option><option value="Yes">Yes｜按凍結 Entry / SL 成交</option></select></label><div class="yes-no-grid"><label>Shadow MFE R（每單位風險）<input id="editv14MfeR" type="number" step="any"></label><label>Shadow MAE R（每單位風險）<input id="editv14MaeR" type="number" step="any"></label><label>V1.3 管理假設 R（V1.4-only 用；未乘 Size）<input id="editv14BaseUnitR" type="number" step="any"></label><label>V1.4 非 Runner 管理結果 R（未乘 Size）<input id="editv14ManagementUnitR" type="number" step="any"></label></div><label>Shadow 持倉有冇到 2R<select id="editv14Reached2R"><option value="No">No／未到</option><option value="Yes">Yes</option></select></label><label>2R 當刻 Gate 已判定<select id="editv14GateRecorded"><option value="No">未判定</option><option value="Yes">已判定（四項全有先開 Runner）</option></select></label><div class="shadow-input-grid"><label class="toggle-row"><input id="editv14GateBreak" type="checkbox"><span>Break</span></label><label class="toggle-row"><input id="editv14GateAcceptance" type="checkbox"><span>Acceptance</span></label><label class="toggle-row"><input id="editv14GateHold" type="checkbox"><span>Hold</span></label><label class="toggle-row"><input id="editv14GateExtend" type="checkbox"><span>Extend</span></label></div><label class="toggle-row"><input id="editv14MainTransitionConfirmed" type="checkbox"><span>Counter Weak 特例：到2R時 Main 已真正轉成今次交易方向的 Transition（其餘路線不適用）</span></label><label>20% Runner 實際退出 R（0 = BE；4 = TP；未完成留空）<input id="editv14RunnerExitR" type="number" step="any"></label><p class="state-note">Conditional + 到 2R + 四項 Gate 成立：80%@2R + 20%×Runner exit。Gate 已判但未全成立：100%@2R。MFE 唔會代替成交先後或 Gate；非 Runner／未到2R請填管理結果。Actual R 沿用原 App：已乘 Production Size；以上 Shadow R 均未乘 Size。</p><div id="editv14OutcomePreview" class="state-note"></div></div></section>
+      <label>
+        V1.3 Actual R（已乘 Production Size）
+        <input id="editProfitR" type="number" step="0.01" inputmode="decimal">
+      </label>
+
+      <div class="yes-no-grid">
+        <label>
+          MFE R
+          <input id="editMfeR" type="number" step="0.01" inputmode="decimal" placeholder="例如 2.35">
+        </label>
+
+        <label>
+          MAE R
+          <input id="editMaeR" type="number" step="0.01" inputmode="decimal" placeholder="例如 0.65">
+        </label>
+
+        <label>
+          Time to RF（H/M）
+          <input id="editTimeToRF" type="text" inputmode="text" autocomplete="off" placeholder="例如 11H45M；未到RF留空">
+        </label>
+      </div>
+
+      <div class="yes-no-grid">
+        <label>
+          去到推RF位
+          <select id="editReachedRF"><option value="No">No</option><option value="Yes">Yes</option><option value="N/A">N/A｜掛盤但冇成交／不適用</option></select>
+        </label>
+
+        <label>
+          去到TP2｜自動 MFE R &gt; 3.9
+          <select id="editReachedTP2" disabled aria-label="自動：MFE R > 3.9"><option value="No">No</option><option value="Yes">Yes</option><option value="N/A">N/A｜掛盤但冇成交／不適用</option></select>
+        </label>
+      </div>
+
+      <label>
+        V1.3 Production Valid Candidate｜自動
+        <select id="editValidCandidate" disabled aria-label="自動：V1.3 Final Size > 0">
+          <option value="Yes">Yes｜符合V1.3候選定義</option>
+          <option value="No">No</option>
+        </select>
+      </label>
+
+      <div class="shadow-research-panel">
+        <div class="shadow-research-heading">
+          <strong>Shadow Research｜事後可修改</strong>
+          <span>Objective at Entry保持snapshot；Retest核心Shadow同管理Counterfactual可更新。</span>
+        </div>
+
+        <div class="yes-no-grid">
+          <label>
+            Post-entry Objective Upgrade
+            <select id="editPostEntryObjectiveUpgrade">
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </label>
+
+          <label>
+            Retest Internal Structure
+            <select id="editRetestInternalStructure">
+              <option value="">未記錄</option>
+              <option value="none">None / One-leg</option>
+              <option value="structured">Yes / Structured</option>
+            </select>
+          </label>
+
+          <label>
+            Retest vs Reclaim Structure
+            <select id="editRetestVsReclaimStructure">
+              <option value="na">N/A｜Reclaim冇清晰micro structure</option>
+              <option value="hold">Hold</option>
+              <option value="sweepReclaim">Sweep-Reclaim</option>
+              <option value="breakAccept">Break-Accept</option>
+            </select>
+          </label>
+
+          <label>
+            Retest Acceptance
+            <select id="editRetestAcceptance">
+              <option value="">未記錄</option>
+              <option value="hold">Hold</option>
+              <option value="closeThrough">Close Through</option>
+            </select>
+          </label>
+
+          <label>
+            Deep-RF Triggered？
+            <select id="editDeepRFTriggered">
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="editDeepRFDetails" class="conditional-panel hidden">
+          <div class="yes-no-grid">
+            <label>
+              RF後原SL有冇被打？
+              <select id="editDeepRFOriginalSLHit">
+                <option value="N/A">N/A</option>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+            </label>
+            <label>
+              RF後 Shadow MFE R
+              <input id="editDeepRFShadowMfeR" type="number" step="0.01" inputmode="decimal">
+            </label>
+            <label>
+              如果冇RF｜最終結果 R
+              <input id="editDeepRFNoRfFinalR" type="number" step="0.01" inputmode="decimal">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="paste-image-section">
+        <span class="field-label">更換／新增圖片</span>
+        <div
+          id="editChartPasteZone"
+          class="paste-zone"
+          contenteditable="true"
+          role="textbox"
+          tabindex="0"
+          spellcheck="false"
+          aria-label="貼上新Chart Screenshot"
+        >點擊呢個區域後貼上新圖片｜Mac：⌘V／Ctrl+V｜iPhone：長按後選「貼上」</div>
+        <button id="pasteEditClipboardImage" type="button" class="secondary-button paste-button">從剪貼簿貼上新圖片</button>
+      </div>
+
+      <label>
+        覆盤備註
+        <textarea id="editNote" rows="5" placeholder="包括入市後Price Pattern等自由文字觀察"></textarea>
+      </label>
+
+      <div class="dialog-actions">
+        <button id="deleteRecord" type="button" class="danger-button">刪除</button>
+        <button value="cancel" class="secondary-button">取消</button>
+        <button id="saveRecordEdit" type="button" class="primary-button compact-button">儲存修改</button>
+      </div>
     </form>
   </dialog>
 
-  <div id="toast"></div>
+  <dialog id="imageLightboxDialog" class="image-lightbox-dialog" aria-label="放大Chart Screenshot">
+    <div class="image-lightbox-shell">
+      <div class="image-lightbox-header">
+        <strong id="imageLightboxCaption">Chart Screenshot</strong>
+        <button id="imageLightboxClose" type="button" class="icon-button" aria-label="關閉放大圖片">×</button>
+      </div>
+
+      <div class="image-lightbox-stage">
+        <img id="imageLightboxImage" src="" alt="放大Chart Screenshot">
+      </div>
+
+      <p class="state-note image-lightbox-note">點背景、右上角 × 或按 Esc 關閉。</p>
+    </div>
+  </dialog>
+
+  <button
+    id="resetAllDefaults"
+    class="reset-all-defaults"
+    type="button"
+    aria-label="除交易日期外，全部選項回復預設"
+    title="除交易日期外，全部選項回復預設"
+  >↺ Default</button>
+
+  <button id="backToTop" class="back-to-top" type="button" aria-label="返回網頁頂部" title="返回網頁頂部">↑</button>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="./dual-track-engine.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>

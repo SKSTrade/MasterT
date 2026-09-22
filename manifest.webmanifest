@@ -1,12 +1,12 @@
 {
-  "name": "Master Trade Decision Matrix V3.4",
-  "short_name": "Trade Matrix",
-  "description": "Master Trade V3.4 decision matrix, trigger grading and local trading journal.",
+  "name": "Master Trade System V1.30.14",
+  "short_name": "Master Trade",
+  "description": "Master Trade System with ZIP round-trip editing: standard Store/Deflate ZIP import, edited trades.csv overlay on records.json, and same-ID record updates only when CSV changed.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#111827",
-  "theme_color": "#111827",
+  "background_color": "#162033",
+  "theme_color": "#162033",
   "orientation": "portrait-primary",
   "icons": [
     {
